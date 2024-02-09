@@ -3,10 +3,12 @@ from sqlalchemy.exc import IntegrityError
 from db import db_init, db
 from werkzeug.utils import secure_filename
 from models import Img
+import os
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///real_estate.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///admin_uploads.db'
+app.config['UPLOAD_FOLDER'] = 'static/assets/uploads'
 db_init(app)
 
 @app.route("/")
@@ -31,7 +33,10 @@ def upload_pic():
     filename = secure_filename(pic.filename)
     mimetype = pic.mimetype
     try:
-        img = Img(img=pic.read(), mimetype=mimetype, name=filename)
+        pic_path = os.path.join(app.config['UPLOAD_FOLDER'], pic.filename)
+        pic.save(pic_path)
+
+        img = Img(section=request.form.get('section'), mimetype=mimetype, name=filename)
         db.session.add(img)
         db.session.commit()
         upload_status = True
@@ -49,3 +54,5 @@ def upload_pic():
 
 if __name__=="__main__":
     app.run(debug=True, host="192.168.74.157")
+
+

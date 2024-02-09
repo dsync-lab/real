@@ -38,6 +38,7 @@
             </div><!-- End Slides only carousel-->
             <form action="{{ url_for('upload_pic') }}" method="post" enctype="multipart/form-data">
               <div class="custom-file mb-3">
+                <input type="hidden" name="carousel_id" value="carousel_id">
                 <input type="file" class="custom-file-input" id="customFile" name="pic">
                 <label class="custom-file-label" for="customFile">Choose file</label>
               </div>

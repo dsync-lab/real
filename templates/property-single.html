@@ -11,7 +11,7 @@
           <div class="col-md-12 col-lg-8">
             <div class="title-single-box">
               <h1 class="title-single">304 Blaster Up</h1>
-              <span class="color-text-a">Chicago, IL 606543</span>
+              <span class="color-text-a">{{ property_data.address }}</span>
             </div>
           </div>
           <div class="col-md-12 col-lg-4">
@@ -21,7 +21,7 @@
                   <a href="{{ url_for('home') }}">Home</a>
                 </li>
                 <li class="breadcrumb-item">
-                  <a href="{{ url_for('property') }}">Properties</a>
+                  <a href="{{ url_for('property') }}">Buy  </a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">
                   304 Blaster Up
@@ -30,10 +30,11 @@
             </nav>
           </div>
         </div>
-      </div>
+      </div>    
     </section><!-- End Intro Single-->
 
     <!-- ======= Property Single ======= -->
+    
     <section class="property-single nav-arrow-b">
       <div class="container">
         <div class="row justify-content-center">
@@ -41,10 +42,11 @@
             <div id="property-single-carousel" class="swiper">
               <div class="swiper-wrapper">
                 <div class="carousel-item-b swiper-slide">
-                  <img src="static/assets/img/slide-1.jpg" alt="">
+                  <img src="{{ url_for('static', filename='assets/img/' + property_data.image + '.jpg') }}" alt="Property Image">
+                  
                 </div>
                 <div class="carousel-item-b swiper-slide">
-                  <img src="static/assets/img/slide-2.jpg" alt="">
+                  <img src="{{ url_for('static', filename='assets/img/slide-2.jpg') }}" alt="">
                 </div>
               </div>
             </div>
@@ -60,11 +62,11 @@
                 <div class="property-price d-flex justify-content-center foo">
                   <div class="card-header-c d-flex">
                     <div class="card-box-ico">
-                      <span class="bi bi-cash">$</span>
+                      <div class="card-title-c align-self-center" style="margin: 15%;">
+                        <h5 class="title-c" >{{ property_data.price }}</h5>
+                      </div>
                     </div>
-                    <div class="card-title-c align-self-center">
-                      <h5 class="title-c">15000</h5>
-                    </div>
+                   
                   </div>
                 </div>
                 <div class="property-summary">
@@ -79,11 +81,11 @@
                     <ul class="list">
                       <li class="d-flex justify-content-between">
                         <strong>Property ID:</strong>
-                        <span>1134</span>
+                        <span>{{ property_data.id + 340}}</span>
                       </li>
                       <li class="d-flex justify-content-between">
                         <strong>Location:</strong>
-                        <span>Chicago, IL 606543</span>
+                        <span>{{ property_data.address }}</span>
                       </li>
                       <li class="d-flex justify-content-between">
                         <strong>Property Type:</strong>
@@ -177,7 +179,7 @@
                 <iframe src="https://player.vimeo.com/video/73221098" width="100%" height="460" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
               </div>
               <div class="tab-pane fade" id="pills-plans" role="tabpanel" aria-labelledby="pills-plans-tab">
-                <img src="static/assets/img/plan2.jpg" alt="" class="img-fluid">
+                <img src="{{ url_for('static', filename='assets/img/plan2.jpg ') }}"alt="" class="img-fluid">
               </div>
               <div class="tab-pane fade" id="pills-map" role="tabpanel" aria-labelledby="pills-map-tab">
                 <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.1422937950147!2d-73.98731968482413!3d40.75889497932681!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c25855c6480299%3A0x55194ec5a1ae072e!2sTimes+Square!5e0!3m2!1ses-419!2sve!4v1510329142834" width="100%" height="460" frameborder="0" style="border:0" allowfullscreen></iframe>
@@ -194,7 +196,7 @@
             </div>
             <div class="row">
               <div class="col-md-6 col-lg-4">
-                <img src="static/assets/img/agent-4.jpg" alt="" class="img-fluid">
+                <img src="{{ url_for('static', filename='assets/img/agent-4.jpg') }}" alt="" class="img-fluid">
               </div>
               <div class="col-md-6 col-lg-4">
                 <div class="property-agent">

@@ -9,21 +9,25 @@
     <meta content="" name="description">
     <meta content="" name="keywords">
 
+    
     <!-- Favicons -->
-    <link href="static/assets/img/favicon.png" rel="icon">
-    <link href="static/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+    <link href="{{ url_for('static', filename='assets/img/WalterPropertiesFavicon/android-chrome-192x192.png') }}" rel="icon">
+    <link href="{{ url_for('static', filename='assets/img/WalterPropertiesFavicon/apple-touch-icon.png') }}" rel="apple-touch-icon">
+
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700" rel="stylesheet">
 
+
     <!-- Vendor CSS Files -->
-    <link href="static/assets/vendor/animate.css/animate.min.css" rel="stylesheet">
-    <link href="static/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="static/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-    <link href="static/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='assets/vendor/animate.css/animate.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='assets/vendor/swiper/swiper-bundle.min.css') }}" rel="stylesheet">
 
     <!-- Template Main CSS File -->
-    <link href="static/assets/css/style.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='assets/css/style.css') }}" rel="stylesheet">
+
 
 
     <!-- ======= Property Search Section ======= -->
@@ -62,7 +66,7 @@
                                 <option>All City</option>
                                 <option>Alabama</option>
                                 <option>Arizona</option>
-                                <option>California</option>
+                                <option>Califor nia</option>
                                 <option>Colorado</option>
                             </select>
                         </div>
@@ -146,11 +150,11 @@
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link {% if active_page == 'property' %}active{% endif %}" href="{{ url_for('property') }}">Property</a>
+                        <a class="nav-link {% if active_page == 'property' %}active{% endif %}" href="{{ url_for('property') }}">Buy</a>
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link {% if active_page == 'blog' %}active{% endif %}" href="{{ url_for('blog') }}">Blog</a>
+                        <a class="nav-link {% if active_page == 'rent' %}active{% endif %}" href="{{ url_for('rent') }}">Rent</a>
                     </li>
 
                     <li class="nav-item dropdown">
@@ -290,10 +294,10 @@
                                     <a href="{{ url_for('about') }}">About</a>
                                 </li>
                                 <li class="list-inline-item">
-                                    <a href="{{ url_for('property') }}">Property</a>
+                                    <a href="{{ url_for('property') }}">Buy</a>
                                 </li>
                                 <li class="list-inline-item">
-                                    <a href="{{ url_for('blog') }}">Blog</a>
+                                    <a href="{{ url_for('rent') }}">Rent</a>
                                 </li>
                                 <li class="list-inline-item">
                                     <a href="{{ url_for('contact') }}">Contact</a>
@@ -344,13 +348,15 @@
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
             class="bi bi-arrow-up-short"></i></a>
 
-    <!-- Vendor JS Files -->
-    <script src="static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="static/assets/vendor/swiper/swiper-bundle.min.js"></script>
-    <script src="static/assets/vendor/php-email-form/validate.js"></script>
+
+    
+        <!-- Vendor JS Files -->
+    <script src="{{ url_for('static', filename='assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/vendor/swiper/swiper-bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/vendor/php-email-form/validate.js') }}"></script>
 
     <!-- Template Main JS File -->
-    <script src="static/assets/js/main.js"></script>
+    <script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
 
 </body>
 </html>
