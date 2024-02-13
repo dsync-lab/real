@@ -39,7 +39,7 @@
              
             </div>
           </div>
-          {% for property_id, property in properties.items() %}
+          {% for rent_property_id, property in properties.items() %}
           <div class="col-md-4">
             <div class="card-box-a card-shadow">
               <div class="img-box-a">
@@ -59,7 +59,7 @@
                     <div class="price-box d-flex">
                       <span class="price-a">For Rent | {{ property.price }}</span>
                     </div>
-                    <a href="{{ url_for('view_property', property_id=property_id) }}" class="link-a">Click here to view
+                    <a href="{{ url_for('view_rent_property', rent_property_id=rent_property_id) }}" class="link-a">Click here to view
                       <span class="bi bi-chevron-right"></span>
                     </a>
                   </div>
@@ -102,15 +102,12 @@
                     <span class="bi bi-chevron-left"></span>
                   </a>
                 </li>
-                <li class="page-item">
-                  <a class="page-link" href="#">1</a>
+                {% set active_page = 1 %}
+                {% for page_num in range(1, 4) %}
+                <li class="page-item {% if active_page == page_num %}active{% endif %}">
+                  <a class="page-link" href="#">{{ page_num }}</a>
                 </li>
-                <li class="page-item active">
-                  <a class="page-link" href="#">2</a>
-                </li>
-                <li class="page-item">
-                  <a class="page-link" href="#">3</a>
-                </li>
+                {% endfor %}
                 <li class="page-item next">
                   <a class="page-link" href="#">
                     <span class="bi bi-chevron-right"></span>

@@ -45,7 +45,7 @@
                         <div class="form-group">
                             <label class="pb-2" for="Type">Keyword</label>
                             <input type="text" class="form-control form-control-lg form-control-a"
-                                placeholder="Keyword">
+                                placeholder="California, CA">
                         </div>
                     </div>
                     <div class="col-md-6 mb-2">
@@ -64,10 +64,10 @@
                             <label class="pb-2" for="city">City</label>
                             <select class="form-control form-select form-control-a" id="city">
                                 <option>All City</option>
-                                <option>Alabama</option>
-                                <option>Arizona</option>
-                                <option>Califor nia</option>
-                                <option>Colorado</option>
+                                <option>Santa Monica</option>
+                                <option>Malibu</option>
+                                <option>Beverly Hills</option>
+                                <option>Newport Beach</option>
                             </select>
                         </div>
                     </div>
@@ -157,16 +157,11 @@
                         <a class="nav-link {% if active_page == 'rent' %}active{% endif %}" href="{{ url_for('rent') }}">Rent</a>
                     </li>
 
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
-                            data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Pages</a>
-                        <div class="dropdown-menu">
-                            <a class="dropdown-item " href="property-single.html">Property Single</a>
-                            <a class="dropdown-item " href="blog-single.html">Blog Single</a>
-                            <a class="dropdown-item " href="{{ url_for('agent') }}">Agents Grid</a>
-                            <a class="dropdown-item " href="{{ url_for('view_agent') }}">Agent Single</a>
-                        </div>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page == 'agent' %}active{% endif %}" href="{{ url_for('agent') }}">Agents</a>
                     </li>
+
+                
                     <li class="nav-item">
                         <a class="nav-link {% if active_page == 'contact' %}active{% endif %} " href="{{ url_for('contact') }}">Contact</a>
                     </li>

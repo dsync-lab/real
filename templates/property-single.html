@@ -21,7 +21,7 @@
                   <a href="{{ url_for('home') }}">Home</a>
                 </li>
                 <li class="breadcrumb-item">
-                  <a href="{{ url_for('property') }}">Buy  </a>
+                  <a href="{{ url_for(route) }}">{{ source }}</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">
                   304 Blaster Up
@@ -93,7 +93,7 @@
                       </li>
                       <li class="d-flex justify-content-between">
                         <strong>Status:</strong>
-                        <span>Sale</span>
+                        <span>{{ property_data.status }}</span>
                       </li>
                       <li class="d-flex justify-content-between">
                         <strong>Area:</strong>
@@ -167,9 +167,7 @@
               <li class="nav-item">
                 <a class="nav-link active" id="pills-video-tab" data-bs-toggle="pill" href="#pills-video" role="tab" aria-controls="pills-video" aria-selected="true">Video</a>
               </li>
-              <li class="nav-item">
-                <a class="nav-link" id="pills-plans-tab" data-bs-toggle="pill" href="#pills-plans" role="tab" aria-controls="pills-plans" aria-selected="false">Floor Plans</a>
-              </li>
+              
               <li class="nav-item">
                 <a class="nav-link" id="pills-map-tab" data-bs-toggle="pill" href="#pills-map" role="tab" aria-controls="pills-map" aria-selected="false">Ubication</a>
               </li>
@@ -224,30 +222,9 @@
                       <span class="color-text-a">Annabela.ge</span>
                     </li>
                   </ul>
-                  <div class="socials-a">
-                    <ul class="list-inline">
-                      <li class="list-inline-item">
-                        <a href="#">
-                          <i class="bi bi-facebook" aria-hidden="true"></i>
-                        </a>
-                      </li>
-                      <li class="list-inline-item">
-                        <a href="#">
-                          <i class="bi bi-twitter" aria-hidden="true"></i>
-                        </a>
-                      </li>
-                      <li class="list-inline-item">
-                        <a href="#">
-                          <i class="bi bi-instagram" aria-hidden="true"></i>
-                        </a>
-                      </li>
-                      <li class="list-inline-item">
-                        <a href="#">
-                          <i class="bi bi-linkedin" aria-hidden="true"></i>
-                        </a>
-                      </li>
-                    </ul>
-                  </div>
+                 
+
+
                 </div>
               </div>
               <div class="col-md-12 col-lg-4">
