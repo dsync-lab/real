@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Details</title>
+</head>
+<body>
+
+    <h2>Property Details</h2>
+
+    <p><strong>Name:</strong> {{ property_data.name }}</p>
+    <p><strong>Price:</strong> {{ property_data.price }}</p>
+    <p><strong>Address:</strong> {{ property_data.address }}</p>
+    <p><strong>Status:</strong> {{ property_data.status }}</p>
+    <p><strong>Area:</strong> {{ property_data.area }}</p>
+    <p><strong>Bathrooms:</strong> {{ property_data.bathrooms }}</p>
+    <p><strong>Garage:</strong> {{ property_data.garage }}</p>
+    <p><strong>Property Type:</strong> {{ property_data.property_type }}</p>
+    <p><strong>Agent ID:</strong> {{ property_data.agent_id }}</p>
+
+    <h3>Images</h3>
+   
+    <img src="{{ url_for('static', filename=image_path) }}" alt="{{ image.name }}">    <p>{{ image.name }}</p>
+       
+</body>
+</html>

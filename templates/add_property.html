@@ -1,0 +1,90 @@
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+ <title>Add Property</title>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />  
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>  
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+</head>
+<body>
+<div class="container">
+<h2>Add Property</h2>
+    <div class="row">
+        <div class="col-lg-12">
+            <p>
+                {% with messages = get_flashed_messages() %}
+                  {% if messages %}
+                 {% for message in messages %}
+                   <div class="alert alert-success">
+                    <strong>{{ message }}</strong>
+                  </div>
+                 {% endfor %}
+                  {% endif %}
+                {% endwith %}
+               </p>
+  <div>
+   <!-- File upload form -->
+   <form method="POST" action="/property-upload" enctype="multipart/form-data" class="form-inline">
+    <div class="form-group">
+                      <label>Choose Images: </label>
+                      <input type="file" name="files[]" id="fileInput" class="form-control" multiple >
+                 </div>
+
+
+                 <label for="name">Name:</label>
+                 <input type="text" name="name" required><br>
+         
+                 <label for="price">Price:</label>
+                 <input type="number" name="price" required><br>
+         
+                 <label for="address">Address:</label>
+                 <input type="text" name="address" required><br>
+         
+                 <label for="status">Status:</label>
+                 <select name="status" required>
+                     <option value="available">For Sale</option>
+                     <option value="sold">For Rent</option>
+                 </select><br>
+         
+                 <label for="area">Area:</label>
+                 <input type="number" name="area" required><br>
+         
+                 <label for="bathroom">Bathroom:</label>
+                 <input type="number" name="bathroom" required><br>
+         
+                 <label for="garage">Garage:</label>
+                 <input type="number" name="garage" required><br>
+         
+                 <label for="property_type">Property Type:</label>
+                 <input type="text" name="property_type" required><br>
+
+                 <input type="submit" name="submit" class="btn btn-success" value="UPLOAD"/>
+             </form>
+  </div>
+  </div>
+ </div>
+</div>
+<script>
+$(document).ready(function(){
+ // File type validation
+    $("#fileInput").change(function(){
+        var fileLength = this.files.length;
+        var match= ["image/jpeg","image/png","image/jpg","image/gif"];
+        var i;
+        for(i = 0; i < fileLength; i++){ 
+            var file = this.files[i];
+            var imagefile = file.type;
+            if(!((imagefile==match[0]) || (imagefile==match[1]) || (imagefile==match[2]) || (imagefile==match[3]))){
+                alert('Please select a valid image file (JPEG/JPG/PNG/GIF).');
+                $("#fileInput").val('');
+                return false;
+            }
+        }
+    });
+});
+</script>
+</body>
+</html>
