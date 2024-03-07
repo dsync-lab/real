@@ -39,13 +39,13 @@
           <div class="col-lg-8">
             <div id="property-single-carousel" class="swiper">
               <div class="swiper-wrapper">
+                {% for path in image_path %}
                 <div class="carousel-item-b swiper-slide">
-                  <img src="{{ url_for('static', filename=image_path) }}" alt="{{ image.name }}"> 
+                  
+                  <img src="{{ url_for('static', filename=path) }}" alt="{{ image.name }}"> 
                   
                 </div>
-                <div class="carousel-item-b swiper-slide">
-                  <img src="{{ url_for('static', filename=image.image_path) }}" alt="">
-                </div>
+                {% endfor %}
               </div>
             </div>
             <div class="property-single-carousel-pagination carousel-pagination"></div>
@@ -61,7 +61,7 @@
                   <div class="card-header-c d-flex">
                     <div class="card-box-ico">
                       <div class="card-title-c align-self-center" style="margin: 15%;">
-                        <h5 class="title-c" >{{ property_data.price }}</h5>
+                        <h5 class="title-c" >${{ property_data.price }}</h5>
                       </div>
                     </div>
                    
@@ -91,11 +91,11 @@
                       </li>
                       <li class="d-flex justify-content-between">
                         <strong>Status:</strong>
-                        <span>{{ property_data.status }}</span>
+                        <span>{{ property_data.property_status }}</span>
                       </li>
                       <li class="d-flex justify-content-between">
                         <strong>Area:</strong>
-                        <span>340m
+                        <span>{{ property_data.area }}m
                           <sup>2</sup>
                         </span>
                       </li>
@@ -105,11 +105,11 @@
                       </li>
                       <li class="d-flex justify-content-between">
                         <strong>Baths:</strong>
-                        <span>2</span>
+                        <span>{{ property_data.bathroom }}</span>
                       </li>
                       <li class="d-flex justify-content-between">
                         <strong>Garage:</strong>
-                        <span>1</span>
+                        <span>{{ property_data.garage}}</span>
                       </li>
                     </ul>
                   </div>

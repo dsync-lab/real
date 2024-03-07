@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, flash
+from flask import Flask, render_template, request, flash, redirect, url_for
 from models import Property, PropertyImage
 from db import db_init, db
 import secrets
@@ -15,7 +15,7 @@ from datetime import datetime
 app = Flask(__name__, static_url_path='/static', static_folder='static')
 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test-4.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test-5.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = secrets.token_urlsafe(24)
 app.config['UPLOAD_FOLDER'] = 'static/assets/uploads'
@@ -71,7 +71,8 @@ def rent():
 
 @app.route("/rent-view/<int:rent_property_id>")
 def view_rent_property(rent_property_id):
-    property_data = rent_properties.get(rent_property_id)
+    property_data = Property.query.filter_by(property_status="For Rent").all()
+    print(property_data)
     if property_data:
         return render_template("property-single.html", property_data=property_data, source="Rent", route="rent") 
     else:
@@ -102,13 +103,17 @@ def search_property():
 def view_property(property_id):
     property_data = Property.query.get(property_id)
     images = PropertyImage.query.filter_by(property_id=property_id).all()
+    formatted_image_path = []
     for image in images:
         current_image_path = image.image_path
         formatted_path = current_image_path.split("static/", 1)[1]
+        formatted_image_path.append(formatted_path)
+        print(f'image inside loop==={image}')
+    print(formatted_image_path)
         
 
     if property_data:
-        return render_template("property-single.html", property_data=property_data, source="Buy", route="property", image=image, image_path=formatted_path) 
+        return render_template("property-single.html", property_data=property_data, source="Buy", route="property", image=image, image_path=formatted_image_path) 
     else:
         return "Property not found", 404
         
@@ -125,7 +130,7 @@ def admin():
     return "YOO fuck you ass hole"
 
 
-
+#====================ADMIN FUNCTIONALITIES===============
 
 @app.route("/property-upload", methods=['GET', 'POST'])
 def add_property():
@@ -140,6 +145,8 @@ def add_property():
         property_type = request.form['property_type']
 
         upload_date = datetime.now()
+        print(type(price))
+        print(f'========={price}===')
 
         new_property = Property(
             name=name, 
@@ -224,11 +231,32 @@ def upload_image(property_id, image_data, property_folder):
 
         db.session.add(new_image)
         db.session.commit()
-        print('=======File uploaded successfully=====')
 
     except Exception as e:
         app.logger.error(f"Error uploading image: {str(e)}")
         return {"status": "error", "message": "An unexpected error occurred during image upload."}
+
+
+@app.route('/all-properties')
+def admin_properties():
+    properties = Property.query.all()
+    return render_template('all_properties.html', properties=properties)
+
+
+@app.route('/all-properties/delete/<int:id>')
+def delete_property(id):
+    try:
+        property = Property.query.get(id)
+        if property:
+            db.session.delete(property)
+            db.session.commit()
+            flash('Property deleted successfully')
+        else:
+            flash('Property not found')
+    except Exception as e:
+        flash('An error occurred while deleting the property')
+        print(e)  
+    return redirect(url_for('admin_properties'))
 
 
 

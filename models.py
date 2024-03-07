@@ -24,7 +24,7 @@ class AgentImage(db.Model):
 class Property(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    price = db.Column(db.Integer, nullable=False)
+    price = db.Column(db.String(10), nullable=False)
     address = db.Column(db.String(200), nullable=False)
     upload_date = db.Column(db.String(200), nullable=False)
     property_status = db.Column(db.String(10), nullable=False)
@@ -33,7 +33,7 @@ class Property(db.Model):
     garage = db.Column(db.Integer)
     property_type = db.Column(db.String(50))
     agent_id = db.Column(db.Integer, db.ForeignKey('agent.id'), nullable=False)
-    images = db.relationship('PropertyImage', backref='property', lazy=True, uselist=True)
+    images = db.relationship('PropertyImage', backref='property', lazy=True, uselist=True, cascade='all, delete-orphan')
 
 class PropertyImage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
