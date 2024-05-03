@@ -33,11 +33,13 @@
     </div>
 </div>
 
-   <!-- File upload form -->
+
+
+   <!-- Property upload form -->
    <form method="POST" action="/property-upload" enctype="multipart/form-data" class="form-inline">
     <div class="form-group">
                       <label>Choose Images: </label>
-                      <input type="file" name="files[]" id="fileInput" class="form-control" multiple >
+                      <input type="file" name="files[]" id="fileInput" class="form-control" multiple required>
                  </div>
 
 
@@ -47,20 +49,25 @@
                  <label for="price">Price:</label>
 
 
-                <input type="text"  name="price" oninput="addCommas(this)">
+                 <input type="text" id="numberInput" name="price" oninput="formatNumber(this)">
 
-                <script>
-                function addCommas(input) {
-                    // Remove existing commas and non-numeric characters
-                    const cleanedValue = input.value.replace(/[^\d]/g, '');
-
-                    // Add commas to the cleaned value
-                    const formattedValue = Number(cleanedValue).toLocaleString();
-
-                    // Update the input field with the formatted value
-                    input.value = formattedValue;
-                }
-                </script>
+                 <script>
+                 function formatNumber(input) {
+                     // Remove non-numeric characters
+                     const cleanedValue = input.value.replace(/[^\d]/g, '');
+                 
+                     // Format the value with commas
+                     const formattedValue = addCommas(cleanedValue);
+                 
+                     // Update the input field with the formatted value
+                     input.value = formattedValue;
+                 }
+                 
+                 function addCommas(value) {
+                     return Number(value).toLocaleString();
+                 }
+                 </script>
+                 
          
                  <label for="address">Address:</label>
                  <input type="text" name="address" required><br>

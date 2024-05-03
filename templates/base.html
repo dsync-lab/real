@@ -150,11 +150,11 @@
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link {% if active_page == 'property' %}active{% endif %}" href="{{ url_for('property') }}">Buy</a>
+                        <a class="nav-link {% if active_page == 'buy_property' %}active{% endif %}" href="{{ url_for('buy_property') }}">Buy</a>
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link {% if active_page == 'rent' %}active{% endif %}" href="{{ url_for('rent') }}">Rent</a>
+                        <a class="nav-link {% if active_page == 'rent_property' %}active{% endif %}" href="{{ url_for('rent_property') }}">Rent</a>
                     </li>
 
                     <li class="nav-item">
@@ -289,10 +289,10 @@
                                     <a href="{{ url_for('about') }}">About</a>
                                 </li>
                                 <li class="list-inline-item">
-                                    <a href="{{ url_for('property') }}">Buy</a>
+                                    <a href="{{ url_for('buy_property') }}">Buy</a>
                                 </li>
                                 <li class="list-inline-item">
-                                    <a href="{{ url_for('rent') }}">Rent</a>
+                                    <a href="{{ url_for('rent_property') }}">Rent</a>
                                 </li>
                                 <li class="list-inline-item">
                                     <a href="{{ url_for('contact') }}">Contact</a>

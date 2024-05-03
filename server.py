@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, flash, redirect, url_for
 from models import Property, PropertyImage
 from db import db_init, db
 import secrets
-import os
+import os  
 from werkzeug.utils import secure_filename
 import mimetypes
 from flask_migrate import Migrate
@@ -10,12 +10,14 @@ from wtforms import StringField, IntegerField, FloatField, FileField, SubmitFiel
 from flask_wtf import FlaskForm
 from wtforms.validators import DataRequired
 from datetime import datetime
+import shutil
+from PIL import Image
 
 
 app = Flask(__name__, static_url_path='/static', static_folder='static')
 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test-5.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test-8.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = secrets.token_urlsafe(24)
 app.config['UPLOAD_FOLDER'] = 'static/assets/uploads'
@@ -24,29 +26,34 @@ db_init(app)
 
 
 
-properties = {
-    1: {"id": 1, "name": "property-1", "price": "$340,000", "address": "Olive Road Two", "image": "property-1", "status": "Sale"},
-    2: {"id": 2, "name": "property-3", "price": "$290,000", "address": "Pear Road Four", "image": "property-3", "status": "Sale"},
-    3: {"id": 3, "name": "property-6", "price": "$420,000", "address": "Banana Road Eight", "image": "property-6", "status": "Sale"},
-    4: {"id": 4, "name": "property-7", "price": "$270,000", "address": "Grape Road Nine", "image": "property-7", "status": "Sale"},
-    5: {"id": 5, "name": "property-8", "price": "$460,000", "address": "Apple Road Eleven", "image": "property-8", "status": "Sale"},
-    6: {"id": 6, "name": "property-8", "price": "$360,000", "address": "Apple Road Eleven", "image": "property-8", "status": "Sale"},
-    
-}
-
-rent_properties = {
-    1: {"id": 1, "name": "property-1", "price": "$6,000", "address": "Olive Road Two", "image": "property-1", "status": "Rent"},
-    2: {"id": 2, "name": "property-3", "price": "$9,000", "address": "Pear Road Four", "image": "property-3", "status": "Rent"},
-    3: {"id": 3, "name": "property-6", "price": "$8,500", "address": "Banana Road Eight", "image": "property-6", "status": "Rent"},
-    4: {"id": 4, "name": "property-7", "price": "$4,600", "address": "Grape Road Nine", "image": "property-7", "status": "Rent"},
-    5: {"id": 5, "name": "property-8", "price": "$5,000", "address": "Apple Road Eleven", "image": "property-8", "status": "Rent"},
-    6: {"id": 6, "name": "property-8", "price": "$6,400", "address": "Apple Road Eleven", "image": "property-8", "status": "Rent"},
-    
-}
 
 @app.route("/")
 def home():
-    return render_template("index.html", properties=rent_properties, buy_property=properties)
+    properties_for_sale = Property.query.filter_by(property_status='For Sale').limit(3).all()
+    latest_properties = Property.query.order_by(Property.upload_date.desc()).limit(10).all()
+    print(f"LATEST PROPERTIES{latest_properties}")
+
+    image_list = []
+    for property in properties_for_sale:
+        print(f'home Property ID{property.id}')
+        images = PropertyImage.query.filter_by(property_id=property.id).all()
+        if images:
+            image_list.append(images[0])
+
+    view_images = [first_item.image_path.split("static/", 1)[1] for first_item in image_list]
+
+    new_property_image = []
+    for property in latest_properties:
+        print(f'home Property ID{property.id}')
+        images = PropertyImage.query.filter_by(property_id=property.id).all()
+        if images:
+            new_property_image.append(images[0])
+
+    view_latest_images = [first_item.image_path.split("static/", 1)[1] for first_item in new_property_image]
+    print(f"Latest Images {view_latest_images}")
+
+
+    return render_template("index.html", properties_for_sale=properties_for_sale, latest_properties=latest_properties, images=view_images, latest_property_image=view_latest_images)
 
 @app.route("/about")
 def about():
@@ -60,23 +67,130 @@ def contact():
 
 
 
-@app.route("/property") 
-def property():
-    return render_template("property-grid.html", properties=properties)
+@app.route("/buy") 
+def buy_property():
+    properties = Property.query.filter_by(property_status="For Sale").all()
+    image_list = []
+    page = request.args.get('page', 1, type=int)
+    per_page = 9
+    start = (page - 1) * per_page
+    end = start + per_page
+    total_pages = (len(properties) + per_page - 1) // per_page
+
+ 
+    property_on_page = properties[start:end]
+
+    for property in property_on_page:
+        print(f'Buy Property ID {property.id}')
+        try:
+            images = PropertyImage.query.filter_by(property_id=property.id).all()
+        except Exception as e:
+            print('Error occurred while querying image ')
+        
+        if images:
+            image_list.append(images[0])
+    print(f"IMAGE LISTTTTTT {image_list}")
+    image_query = {}
+    for element in image_list:
+        property_id = element.property_id
+        property_image_path = element.image_path.split("static/", 1)[1]
+        print(f"PROPERTY_ID: {property_id}, PROPERTY_PATH: {property_image_path} ")
+        image_query[property_id] = property_image_path
+    print(f"DICTIONARYY: {image_query}")
+    
+    
+    return render_template("property-grid.html", properties=property_on_page, images=image_query, total_pages=total_pages, page=page)
+
  
 @app.route("/rent")
-def rent():
-    return render_template("rent-grid.html", properties=rent_properties)
+def rent_property():
+    properties = Property.query.filter_by(property_status="For Rent").all()
+    image_list = []
+    page = request.args.get('page', 1, type=int)
+    per_page = 9
+    start = (page - 1) * per_page
+    end = start + per_page
+    total_pages = (len(properties) + per_page - 1) // per_page
+
+ 
+    property_on_page = properties[start:end]
+    for property in property_on_page:
+        print(f'Property ID{property.id}')
+        images = PropertyImage.query.filter_by(property_id=property.id).all()
+        if images:
+            image_list.append(images[0])
+
+    image_query = {}
+    for element in image_list:
+        property_id = element.property_id
+        property_image_path = element.image_path.split("static/", 1)[1]
+        # print(f"PROPERTY_ID: {property_id}, PROPERTY_PATH: {property_image_path} ")
+        image_query[property_id] = property_image_path
+
+
+    return render_template("rent-grid.html", properties=property_on_page, images=image_query, total_pages=total_pages, page=page)
+
+
+@app.route("/property-view/<int:property_id>")
+def view_property(property_id):
+    property_data = Property.query.get_or_404(property_id)
+    print(f'Queried property {property_data}')
+    
+
+    images = PropertyImage.query.filter_by(property_id=property_id).all()
+    if images:
+
+        
+
+        # try:
+        #     images = PropertyImage.query.filter_by(property_id=property.id).all()
+        # except Exception as e:
+        #     print('Error occurred while querying image ')
+        print(images)
+        print(f'Queried images {images}')
+        formatted_image_path = []
+
+        print(f'&&&&&& {property_data}')
+        for image in images:
+            current_image_path = image.image_path
+            formatted_path = current_image_path.split("static/", 1)[1]
+            formatted_image_path.append(formatted_path)
+            
+            
+
+        if property_data:
+            return render_template("property-single.html", property_data=property_data, source="Buy", route="buy_property", image=image, image_path=formatted_image_path) 
+        else:
+            return "Property not found", 404
+    else:
+        print("Error occurred while quering image")
+        return render_template("property-single.html", property_data=property_data, source="Buy", route="buy_property", image=None, image_path=None) 
 
 
 @app.route("/rent-view/<int:rent_property_id>")
 def view_rent_property(rent_property_id):
-    property_data = Property.query.filter_by(property_status="For Rent").all()
-    print(property_data)
-    if property_data:
-        return render_template("property-single.html", property_data=property_data, source="Rent", route="rent") 
-    else:
-        return "Property not found", 404
+    property_data = Property.query.get_or_404(property_id)
+    try:
+        images = PropertyImage.query.filter_by(property_id=property_id).all()
+        formatted_image_path = []
+        
+        if images:
+            print(f'view {images}')
+            for image in images:
+                current_image_path = image.image_path
+                formatted_path = current_image_path.split("static/", 1)[1]
+                formatted_image_path.append(formatted_path)
+                
+
+            if property_data:
+                return render_template("property-single.html", property_data=property_data, source="Rent", route="rent_property", image=image, image_path=formatted_image_path) 
+            else:
+                return "Property not found", 404
+        else:
+            return render_template("property-single.html")
+    except UnboundLocalError as e:
+        # print("Property not found", e)
+        return f"Property not found {e}", 404
 
 @app.route("/about", methods= ['GET', 'POST'])
 def search_property():
@@ -98,24 +212,6 @@ def search_property():
 
 
 
-
-@app.route("/property-view/<int:property_id>")
-def view_property(property_id):
-    property_data = Property.query.get(property_id)
-    images = PropertyImage.query.filter_by(property_id=property_id).all()
-    formatted_image_path = []
-    for image in images:
-        current_image_path = image.image_path
-        formatted_path = current_image_path.split("static/", 1)[1]
-        formatted_image_path.append(formatted_path)
-        print(f'image inside loop==={image}')
-    print(formatted_image_path)
-        
-
-    if property_data:
-        return render_template("property-single.html", property_data=property_data, source="Buy", route="property", image=image, image_path=formatted_image_path) 
-    else:
-        return "Property not found", 404
         
 @app.route("/agent")
 def agent():
@@ -130,7 +226,7 @@ def admin():
     return "YOO fuck you ass hole"
 
 
-#====================ADMIN FUNCTIONALITIES===============
+#====================ADMIN FUNCTIONALITIES====================#
 
 @app.route("/property-upload", methods=['GET', 'POST'])
 def add_property():
@@ -145,21 +241,27 @@ def add_property():
         property_type = request.form['property_type']
 
         upload_date = datetime.now()
-        print(type(price))
-        print(f'========={price}===')
+        
 
-        new_property = Property(
-            name=name, 
-            price=price, 
-            address=address, 
-            upload_date=upload_date,
-            property_status=property_status,
-            area=area,
-            bathroom=bathroom,
-            garage=garage,
-            property_type=property_type,
-            agent_id=1,
-        )
+        property_exists = Property.query.filter_by(name=name).first()
+
+        if property_exists:
+            flash('Property Already Exists')
+            return redirect(url_for('add_property'))
+        else:
+
+            new_property = Property(
+                name=name, 
+                price=price, 
+                address=address, 
+                upload_date=upload_date,
+                property_status=property_status,
+                area=area,
+                bathroom=bathroom,
+                garage=garage,
+                property_type=property_type,
+                agent_id=1,
+            )
 
 
         try: 
@@ -168,19 +270,21 @@ def add_property():
            
 
             property_id = new_property.id
-            # # handle image upload
-            # image_data = request.files.get('image')
            
             files = request.files.getlist('files[]')
-            #print(files)
-             # Create a folder for each property to organize images
+            
+
+            # Create a folder for each property to organize images
             property_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(property_id))
             for image_data in files:
                 if image_data:
                     result = upload_image(property_id, image_data, property_folder)
                     print(result)
+            if result:
                 
-            flash('Property added successfully')
+                flash('Property added successfully')
+            else:
+                flash("Image imensions are too Small/Large")
         except Exception as e:
             db.session.rollback()
             print(f"Error adding property: {str(e)}")
@@ -199,54 +303,117 @@ def show_property(property_id):
     return render_template('view_property.html', property_data=property_data, image=image, image_path=formatted_path)
 
 
+def is_image_valid(image_path, image_min_size, image_max_size, min_width, min_height, max_width, max_height):
+    # Getting the image size
+    image_size = os.path.getsize(image_path)
+    if image_size < image_min_size or image_size > image_max_size:
+        return False
+    img = Image.open(image_path)
+    width, height = img.size
+
+    return width >= min_width and height >= min_height or width <= max_width and height <= max_height
+
 def get_mimetype(file_path):
     return mimetypes.guess_type(file_path)[0] or 'application/octet-stream'
 
 def upload_image(property_id, image_data, property_folder):
-    try:
-        if not image_data:
-            return {"status": "error", "message": "No image data provided."}
+     # Get the filename and check if it's allowed
+    filename = secure_filename(image_data.filename)
+    image_min_size = 1000
+    image_max_size = 10 * 1024 * 1024
+    min_width = 600
+    min_height = 500
 
-        # Get the filename and check if it's allowed
-        filename = secure_filename(image_data.filename)
-        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
-        if '.' not in filename or filename.rsplit('.', 1)[1].lower() not in allowed_extensions:
-            return {"status": "error", "message": "Invalid file type. Allowed types are png, jpg, jpeg, gif."}
+    max_width = 900
+    max_height = 900
 
-       
-        os.makedirs(property_folder, exist_ok=True)
+    target_size = (800, 600)
+    temp_file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    image_data.save(temp_file_path)
+    
 
-        # Save the image file
-        file_path = os.path.join(property_folder, filename)
-        image_data.save(file_path)
-        now = datetime.now()
+    if is_image_valid(temp_file_path, image_min_size, image_max_size, min_width, min_height, max_width, max_height):
+    
+        try:    
+            
+            if not image_data:
+                return {"status": "error", "message": "No image data provided."}  
 
-        new_image = PropertyImage(
-            name=filename,
-            property_id=property_id,
-            upload_date=now,
-            image_path=file_path,
-            mimetype=get_mimetype(file_path)
-        )
+            allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
+            if '.' not in filename or filename.rsplit('.', 1)[1].lower() not in allowed_extensions:
+                return {"status": "error", "message": "Invalid file type. Allowed types are png, jpg, jpeg, gif."}
 
-        db.session.add(new_image)
-        db.session.commit()
+        
+            os.makedirs(property_folder, exist_ok=True)
+ 
+            img = Image.open(temp_file_path)
 
-    except Exception as e:
-        app.logger.error(f"Error uploading image: {str(e)}")
-        return {"status": "error", "message": "An unexpected error occurred during image upload."}
+            img_resized = img.resize(target_size, resample=Image.LANCZOS)
+
+            # Create a new image with the target size and paste the resized image onto it
+            padded_img = Image.new('RGB', target_size, (255, 255, 255))  # Create a white background
+            left = (target_size[0] - img_resized.width) // 2
+            top = (target_size[1] - img_resized.height) // 2
+            padded_img.paste(img_resized, (left, top))
+            
+            
+
+            # Save the image file
+            
+            file_path = os.path.join(property_folder, filename)
+            print(f"File patH {file_path}")
+
+            padded_img.save(file_path, quality=95)
+            os.remove(temp_file_path)
+            print("Image processing completed successfully. ")
+
+            now = datetime.now()
+
+            new_image = PropertyImage( 
+                name=filename,
+                property_id=property_id,
+                upload_date=now,
+                image_path=file_path,
+                mimetype=get_mimetype(file_path)
+            )
+
+            db.session.add(new_image)
+            db.session.commit()
+            
+            return True
+
+        except Exception as e:
+            app.logger.error(f"Error uploading image: {str(e)}")
+            return {"status": "error", "message": "An unexpected error occurred during image upload."}
+    else:
+        return False
 
 
 @app.route('/all-properties')
-def admin_properties():
+def all_properties():
     properties = Property.query.all()
-    return render_template('all_properties.html', properties=properties)
+    image_list = []
+    for property in properties:
+        print(f'admin Property ID{property.id}')
+        images = PropertyImage.query.filter_by(property_id=property.id).all()
+        if images:
+            image_list.append(images)
+    print(f'admin All images{image_list}')
+    # view_images = [first_item.image_path.split("static/", 1)[1] for first_item in image_list]
+    return render_template('all_properties.html', properties=properties, images=image_list)
 
 
 @app.route('/all-properties/delete/<int:id>')
 def delete_property(id):
     try:
-        property = Property.query.get(id)
+        property = Property.query.get_or_404(id)
+        upload_folder = app.config['UPLOAD_FOLDER']
+        folder_id = os.path.join(upload_folder, str(id))
+        shutil.rmtree(folder_id) # deletes the property image folder using the folder id
+       
+        print(f"Folder with ID {folder_id} deleted successfully.")
+
+
         if property:
             db.session.delete(property)
             db.session.commit()
@@ -256,9 +423,9 @@ def delete_property(id):
     except Exception as e:
         flash('An error occurred while deleting the property')
         print(e)  
-    return redirect(url_for('admin_properties'))
+    return redirect(url_for('all_properties'))
 
 
 
-if __name__=="__main__":
+if __name__=="__main__": 
     app.run(debug=True)

@@ -33,23 +33,25 @@
     <!-- ======= Property Grid =======  -->
     <section class="property-grid grid">
       <div class="container">
+        {% if properties %}
         <div class="row">
           <div class="col-sm-12">
             <div class="grid-option">
              
             </div>
           </div>
-          {% for rent_property_id, property in properties.items() %}
+      
+          {% for property in properties %}
           <div class="col-md-4">
             <div class="card-box-a card-shadow">
               <div class="img-box-a">
-                <img src="{{ url_for('static', filename='assets/img/' + property.image + '.jpg') }}" alt="Property Image" class="img-a img-fluid">
+                <img src="{{ url_for('static', filename=images[property.id]) }}" alt="Property Image" class="img-a img-fluid">
               </div>
               <div class="card-overlay">
                 <div class="card-overlay-a-content">
                   <div class="card-header-a">
                     <h2 class="card-title-a">
-                      <a href="#">204 Mount
+                      <a href="{{ url_for('view_property', property_id=property.id) }}">{{ property.name }}
                         
                         <br /> {{ property.address }}</a>
                         
@@ -57,9 +59,9 @@
                   </div>
                   <div class="card-body-a">
                     <div class="price-box d-flex">
-                      <span class="price-a">For Rent | {{ property.price }}</span>
+                      <span class="price-a">For Rent | ${{ property.price }}</span>
                     </div>
-                    <a href="{{ url_for('view_rent_property', rent_property_id=rent_property_id) }}" class="link-a">Click here to view
+                    <a href="{{ url_for('view_property', property_id=property.id) }}" class="link-a">Click here to view
                       <span class="bi bi-chevron-right"></span>
                     </a>
                   </div>
@@ -93,35 +95,47 @@
 
 
         
-        <div class="row">
-          <div class="col-sm-12">
-            <nav class="pagination-a">
-              <ul class="pagination justify-content-end">
-                <li class="page-item disabled">
-                  <a class="page-link" href="#" tabindex="-1">
-                    <span class="bi bi-chevron-left"></span>
-                  </a>
-                </li>
-                {% set active_page = 1 %}
-                {% for page_num in range(1, 4) %}
-                <li class="page-item {% if active_page == page_num %}active{% endif %}">
-                  <a class="page-link" href="#">{{ page_num }}</a>
+          <div class="row">
+            <div class="col-sm-12">
+              <nav class="pagination-a">
+                <ul class="pagination justify-content-end">
+                {% if page > 1 %}
+                  <li class="page-item ">
+                    <a class="page-link" href="{{ url_for('rent_property', page=page-1) }}">
+                      <span class="bi bi-chevron-left"></span>
+                    </a>
+                  </li>
+                {% endif %}
+                {% set active_page = page %}  
+                {% for page in range(1, total_pages + 1) %} 
+                <li class="page-item {% if active_page == page %}active{% endif %}">
+                
+                  <a class="page-link" href="{{ url_for('rent_property', page=page) }}">{{ page }}</a>
                 </li>
                 {% endfor %}
-                <li class="page-item next">
-                  <a class="page-link" href="#">
-                    <span class="bi bi-chevron-right"></span>
-                  </a>
-                </li>
-              </ul>
-            </nav>
+                 {% if page < total_pages %} 
+                  <li class="page-item next">
+                    <a class="page-link" href="{{ url_for('rent_property', page=page+1) }}">
+                      <span class="bi bi-chevron-right"></span>
+                    </a>
+                  </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            </div>
           </div>
         </div>
-      </div>
-    </section><!-- End Property Grid Single-->
-
-
-  </main><!-- End #main -->
-
-{% endblock %}
-{% set active_page = 'rent' %}
+      </section><!-- End Property Grid Single-->
+      {% else %}
+      <h1>No Properties Available</h1>
+      {% endif %}
+  
+      
+  
+    </main><!-- End #main -->
+  
+  
+  
+  
+  {% endblock %}
+  {% set active_page = 'rent_property' %}

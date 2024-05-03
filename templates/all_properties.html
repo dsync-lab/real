@@ -34,6 +34,7 @@
         </div>
     </div>
 
+    {% if properties %}
     <table class="table">
 
 
@@ -43,18 +44,24 @@
                 <th scope="col">Name</th>
                 <th scope="col">Price</th>
                 <th scope="col">Address</th>
+                <th scope="col">Images</th>
                 <th scope="col">Status</th>
-                <th scope="col">Date</th>
+                <th scope="col">Upload Date</th>
                 <th scope="col">Actions</th>
             </tr>
         </thead>
+        
         <tbody>
+            
             {% for property in properties %}
             <tr>
                 <th scope="row">{{ property.id }}</th>
                 <td>{{ property.name }}</td>
                 <td>{{ property.price }}</td>
                 <td>{{ property.address }}</td>
+               
+                <td>{{ images[property.id - 1] }}</td>
+
                 <td>{{ property.property_status }}</td>
                 <td>{{ property.upload_date }}</td>
                 <td>
@@ -85,14 +92,16 @@
                      </div>
                 </td>
             </tr>
-
-
+            
             {% endfor %}
         </tbody>
+       
 
     </table>
 
-
+    {% else %}
+        <p>No Properties Available</p>
+    {% endif %}
 
 
 

@@ -9,8 +9,8 @@
   <div class="intro intro-carousel swiper position-relative">
     
     <div class="swiper-wrapper">
-      {% for id, property in properties.items() %}
-        {% if id < 4 %}
+      {% for property in properties_for_sale %}
+        {% if property.id < 4 %}
           <div class="swiper-slide carousel-item-a intro-item bg-image" style="background-image: url(static/assets/img/slide-1.jpg)">
             <div class="overlay overlay-a"></div>
             <div class="intro-content display-table">
@@ -27,7 +27,7 @@
                           <br> {{ property.address }}
                         </h1>
                         <p class="intro-subtitle intro-price">
-                          <a href="{{ url_for('rent') }}"><span class="price-a">rent | {{ property.price }}</span></a>
+                          <a href="{{ url_for('buy_property') }}"><span class="price-a">For Sale | ${{ property.price }}</span></a>
                         </p>
                       </div>
                     </div>
@@ -146,7 +146,7 @@
                 <h2 class="title-a">Latest Properties</h2>
               </div>
               <div class="title-link">
-                <a href="{{ url_for('property') }}">All Property
+                <a href="{{ url_for('buy_property') }}">All Property
                   <span class="bi bi-chevron-right"></span>
                 </a>
               </div>
@@ -156,12 +156,12 @@
 
         <div id="property-carousel" class="swiper">
           <div class="swiper-wrapper">
-            {% for id, item in buy_property.items() %} 
-              {% if id < 4 %}      
+            {% for property in latest_properties %} 
+              {% if property.id < 4 %}      
                 <div class="carousel-item-b swiper-slide">
                   <div class="card-box-a card-shadow">
                     <div class="img-box-a">
-                      <img src="{{ url_for('static', filename='assets/img/' + item.image + '.jpg') }}" alt="" class="img-a img-fluid">
+                      <img src="{{ url_for('static', filename=latest_property_image[property.id - 1]) }}" alt="Property Image" class="img-a img-fluid">
                     </div>
                     <div class="card-overlay">
                       <div class="card-overlay-a-content">
@@ -173,9 +173,9 @@
                         </div>
                         <div class="card-body-a">
                           <div class="price-box d-flex">
-                            <span class="price-a">For {{ item.status }} | {{ item.price }}</span>
+                            <span class="price-a">For {{ property.status }} | ${{ property.price }}</span>
                           </div>
-                          <a href="{{ url_for('view_property', property_id=id) }}" class="link-a">Click here to view
+                          <a href="{{ url_for('view_property', property_id=property.id) }}" class="link-a">Click here to view
                             <span class="bi bi-chevron-right"></span>
                           </a>
                         </div>
@@ -415,7 +415,7 @@
                 <h2 class="title-a">Latest News</h2>
               </div>
               <div class="title-link">
-                <a href="blog-grid.html">All News
+                <a href="#">All News
                   <span class="bi bi-chevron-right"></span>
                 </a>
               </div>
