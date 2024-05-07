@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, flash, redirect, url_for
-from models import Property, PropertyImage
+from models import Property, PropertyImage, Users
 from db import db_init, db
 import secrets
 import os  
@@ -12,12 +12,20 @@ from wtforms.validators import DataRequired
 from datetime import datetime
 import shutil
 from PIL import Image
-
+from apps.authentication.forms import CreateAccountForm, LoginForm
+from apps.authentication.util import verify_pass
+from flask_login import (
+    login_required,
+    current_user,
+    login_user,
+    logout_user
+)
+from jinja2 import TemplateNotFound
 
 app = Flask(__name__, static_url_path='/static', static_folder='static')
 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test-8.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test-9.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = secrets.token_urlsafe(24)
 app.config['UPLOAD_FOLDER'] = 'static/assets/uploads'
@@ -41,6 +49,7 @@ def home():
             image_list.append(images[0])
 
     view_images = [first_item.image_path.split("static/", 1)[1] for first_item in image_list]
+    print(f"IMAGE TO VIEW {view_images}")
 
     new_property_image = []
     for property in latest_properties:
@@ -228,6 +237,142 @@ def admin():
 
 #====================ADMIN FUNCTIONALITIES====================#
 
+
+
+
+
+# Login & Registration
+@app.route("/admin-home")
+def admin_home():
+    return render_template("home/index.html", segment="index")
+
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    login_form = LoginForm(request.form)
+    if 'login' in request.form:
+
+        # read form data
+        username = request.form['username']
+        password = request.form['password']
+
+        # Locate user
+        user = Users.query.filter_by(username=username).first()
+
+        # Check the password
+        if user and verify_pass(password, user.password):
+
+            login_user(user)
+            return redirect(url_for('admin_home'))
+
+        # Something (user or pass) is not ok
+        return render_template('accounts/login.html',
+                               msg='Wrong user or password',
+                               form=login_form)
+
+    if not current_user.is_authenticated:
+        return render_template('accounts/login.html',
+                               form=login_form)
+    return redirect(url_for('admin_home'))
+
+
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('authentication_blueprint.login'))
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    create_account_form = CreateAccountForm(request.form)
+    if 'register' in request.form:
+
+        username = request.form['username']
+        email = request.form['email']
+
+        # Check usename exists
+        user = Users.query.filter_by(username=username).first()
+        if user:
+            return render_template('accounts/register.html',
+                                   msg='Username already registered',
+                                   success=False,
+                                   form=create_account_form)
+
+        # Check email exists
+        user = Users.query.filter_by(email=email).first()
+        if user:
+            return render_template('accounts/register.html',
+                                   msg='Email already registered',
+                                   success=False,
+                                   form=create_account_form)
+
+        # else we can create the user
+        user = Users(**request.form)
+        db.session.add(user)
+        db.session.commit()
+
+        return render_template('accounts/register.html',
+                               msg='User created please <a href="/login">login</a>',
+                               success=True,
+                               form=create_account_form)
+
+    else:
+        return render_template('accounts/register.html', form=create_account_form)
+
+
+@login_required
+def route_template(template):
+
+    try:
+
+        if not template.endswith('.html'):
+            template += '.html'
+
+        # Detect the current page
+        segment = get_segment(request)
+
+        # Serve the file (if exists) from app/templates/home/FILE.html
+        return render_template("home/" + template, segment=segment)
+
+    except TemplateNotFound:
+        return render_template('home/page-404.html'), 404
+
+    except:
+        return render_template('home/page-500.html'), 500
+
+
+# Helper - Extract current page name from request
+def get_segment(request):
+
+    try:
+
+        segment = request.path.split('/')[-1]
+
+        if segment == '':
+            segment = 'index'
+
+        return segment
+
+    except:
+        return None
+
+@login_required
+@app.route("/profile")
+def admin_profile():
+    if current_user.is_authenticated:
+    
+        return render_template("home/profile.html", segment="profile", current_user=current_user)
+    else:
+        return redirect(url_for("login"))
+
+
+
+
+
+
+
 @app.route("/property-upload", methods=['GET', 'POST'])
 def add_property():
     if request.method == 'POST':
@@ -289,18 +434,18 @@ def add_property():
             db.session.rollback()
             print(f"Error adding property: {str(e)}")
             flash('Error adding property. Please try again', 'error')
-    return render_template('add_property.html') 
+    return render_template('add_property.html', segment="add_property") 
 
-@app.route('/show_property/<int:property_id>')
-def show_property(property_id):
-    property_data = Property.query.get_or_404(property_id)
-    images = PropertyImage.query.filter_by(property_id=property_id).all()
-    for image in images:
-        current_image_path = image.image_path
-        formatted_path = current_image_path.split("static/", 1)[1]
+# @app.route('/show_property/<int:property_id>')
+# def show_property(property_id):
+#     property_data = Property.query.get_or_404(property_id)
+#     images = PropertyImage.query.filter_by(property_id=property_id).all()
+#     for image in images:
+#         current_image_path = image.image_path
+#         formatted_path = current_image_path.split("static/", 1)[1]
         
 
-    return render_template('view_property.html', property_data=property_data, image=image, image_path=formatted_path)
+#     return render_template('view_property.html', property_data=property_data, image=image, image_path=formatted_path)
 
 
 def is_image_valid(image_path, image_min_size, image_max_size, min_width, min_height, max_width, max_height):
@@ -400,7 +545,7 @@ def all_properties():
             image_list.append(images)
     print(f'admin All images{image_list}')
     # view_images = [first_item.image_path.split("static/", 1)[1] for first_item in image_list]
-    return render_template('all_properties.html', properties=properties, images=image_list)
+    return render_template('home/tables.html', properties=properties, images=image_list, segment="all_properties")
 
 
 @app.route('/all-properties/delete/<int:id>')
@@ -428,4 +573,7 @@ def delete_property(id):
 
 
 if __name__=="__main__": 
-    app.run(debug=True)
+    app.run(debug=True, host="192.168.187.157")
+
+
+# jason2 dingidhgiW£$$  dingidhgiW£$$
