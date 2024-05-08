@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, flash, redirect, url_for
 from models import Property, PropertyImage, Users
-from db import db_init, db
+from db import db_init, db, login_manager
 import secrets
 import os  
 from werkzeug.utils import secure_filename
@@ -21,11 +21,12 @@ from flask_login import (
     logout_user
 )
 from jinja2 import TemplateNotFound
+import logging
 
 app = Flask(__name__, static_url_path='/static', static_folder='static')
 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test-9.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test-10.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = secrets.token_urlsafe(24)
 app.config['UPLOAD_FOLDER'] = 'static/assets/uploads'
@@ -235,6 +236,7 @@ def admin():
     return "YOO fuck you ass hole"
 
 
+
 #====================ADMIN FUNCTIONALITIES====================#
 
 
@@ -242,10 +244,21 @@ def admin():
 
 
 # Login & Registration
-@app.route("/admin-home")
-def admin_home():
-    return render_template("home/index.html", segment="index")
 
+@app.route("/admin-home")
+@login_required
+def admin_home():
+    print(f"CURRENT USERRR{current_user}")
+    if not hasattr(current_user, 'is_admin') or not current_user.is_admin:
+        return "Unathorized Access"
+
+    if current_user.is_authenticated:
+
+        return render_template("home/index.html", segment="index")
+    elif not current_user.is_admin:
+        logging.warning(f"Unauthorized access to admin panel by user: {current_user.username}")
+    else:
+        return redirect(url_for('login'))
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -279,9 +292,10 @@ def login():
 
 
 @app.route('/logout')
+@login_required
 def logout():
     logout_user()
-    return redirect(url_for('authentication_blueprint.login'))
+    return redirect(url_for('login'))
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -307,9 +321,16 @@ def register():
                                    msg='Email already registered',
                                    success=False,
                                    form=create_account_form)
+        user = Users.query.all()
+        if len(user) == 0:
+            is_admin = True
+        else:
+            is_admin = False
 
         # else we can create the user
-        user = Users(**request.form)
+        user_data = dict(request.form)
+        user_data['is_admin'] = is_admin
+        user = Users(**user_data)
         db.session.add(user)
         db.session.commit()
 
@@ -369,10 +390,7 @@ def admin_profile():
 
 
 
-
-
-
-
+@login_required
 @app.route("/property-upload", methods=['GET', 'POST'])
 def add_property():
     if request.method == 'POST':
@@ -429,7 +447,7 @@ def add_property():
                 
                 flash('Property added successfully')
             else:
-                flash("Image imensions are too Small/Large")
+                flash("Image dimensions are too Small/Large")
         except Exception as e:
             db.session.rollback()
             print(f"Error adding property: {str(e)}")
@@ -533,7 +551,7 @@ def upload_image(property_id, image_data, property_folder):
     else:
         return False
 
-
+@login_required
 @app.route('/all-properties')
 def all_properties():
     properties = Property.query.all()
@@ -547,7 +565,7 @@ def all_properties():
     # view_images = [first_item.image_path.split("static/", 1)[1] for first_item in image_list]
     return render_template('home/tables.html', properties=properties, images=image_list, segment="all_properties")
 
-
+@login_required
 @app.route('/all-properties/delete/<int:id>')
 def delete_property(id):
     try:
@@ -570,6 +588,28 @@ def delete_property(id):
         print(e)  
     return redirect(url_for('all_properties'))
 
+    
+# Errors
+
+@login_manager.unauthorized_handler
+def unauthorized_handler():
+    return render_template('home/page-403.html'), 403
+
+
+@app.errorhandler(403)
+def access_forbidden(error):
+    return render_template('home/page-403.html'), 403
+
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('home/page-404.html'), 404
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    return render_template('home/page-500.html'), 500
+
 
 
 if __name__=="__main__": 
@@ -577,3 +617,4 @@ if __name__=="__main__":
 
 
 # jason2 dingidhgiW£$$  dingidhgiW£$$
+#jason difjidfhd&i44

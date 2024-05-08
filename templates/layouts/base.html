@@ -22,7 +22,7 @@
   <link rel="canonical" href="https://appseed.us/admin-dashboards/flask-boilerplate-dashboard-argon">
   
   <title>
-    Flask Argon Dashboard - {% block title %} Open-Source Admin Panel {% endblock %} | AppSeed
+    Admin Dashboard - {% block title %} Admin Panel {% endblock %} | AppSeed
   </title>
 
   <!-- Favicon - loaded as static -->
@@ -42,6 +42,7 @@
 </head>
 
 <body class="">
+  
 
   {% include "includes/sidenav.html" %}
 
@@ -54,12 +55,20 @@
   </div>
 
   {% include "includes/scripts.html" %}
+  
+  
+  {% block javascripts %}
+ 
 
-  <!-- Specific JS goes HERE --> 
-  {% block javascripts %}{% endblock javascripts %}
+  {% endblock javascripts %}
+
+  
 
   <script src="static/admin/static/assets/js/argon.js?v=1.2.0"></script>
 
 </body>
 
 </html>
+
+
+
