@@ -1,9 +1,8 @@
 
 from db import db, login_manager
 from flask_login import UserMixin
-
 from apps.authentication.util import hash_pass
-
+import uuid
 
 class Agent(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -45,7 +44,21 @@ class PropertyImage(db.Model):
     property_id = db.Column(db.Integer, db.ForeignKey('property.id'), nullable=False)
     image_path = db.Column(db.String(100), nullable=False)
     mimetype = db.Column(db.String(50), nullable=False)
+
+class Visitor(db.Model):
+    __tablename__ = 'visitors'
     
+    id = db.Column(db.Integer, primary_key=True)
+    visitor_id = db.Column(db.String(36), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
+    visit_count = db.Column(db.Integer, default=1)
+
+    def __init__(self, **kwargs):
+        super(Visitor, self).__init__(**kwargs)
+        if not self.visitor_id:
+            self.visitor_id = str(uuid.uuid4())
+
+    def __repr__(self):
+        return f'<Visitor {self.visitor_id}>'
     
     
 class Users(db.Model, UserMixin):

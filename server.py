@@ -1,5 +1,5 @@
-from flask import Flask, render_template, request, flash, redirect, url_for
-from models import Property, PropertyImage, Users
+from flask import Flask, render_template, request, flash, redirect, url_for, session, make_response
+from models import Property, PropertyImage, Users, Visitor
 from db import db_init, db, login_manager
 import secrets
 import os  
@@ -22,16 +22,63 @@ from flask_login import (
 )
 from jinja2 import TemplateNotFound
 import logging
+import hashlib
+from sqlalchemy import func
+
+
 
 app = Flask(__name__, static_url_path='/static', static_folder='static')
 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test-10.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test-14.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = secrets.token_urlsafe(24)
 app.config['UPLOAD_FOLDER'] = 'static/assets/uploads'
 migrate = Migrate(app, db)
 db_init(app)
+
+
+def hash_ip(ip_address):
+    # Use SHA-256 to hash the IP address
+    return hashlib.sha256(ip_address.encode()).hexdigest()
+
+def generate_unique_visitor_id():
+    return str(uuid.uuid4())
+
+
+@app.before_request
+def before_request():
+    # Check if the 'visitor_id' cookie is set
+    visitor_id = request.cookies.get('visitor_id')
+    
+    if visitor_id:
+        # Cookie is set, update the visit count for this visitor
+        visitor = Visitor.query.filter_by(visitor_id=visitor_id).first()
+        if visitor:
+            visitor.visit_count += 1
+        else:
+            # This should not happen, but handle the case where visitor_id cookie is set but not found in DB
+            visitor = Visitor(visitor_id=visitor_id)
+            db.session.add(visitor)
+    else:
+        # Cookie is not set, create a new visitor record with a unique visitor_id
+        visitor = Visitor()
+        db.session.add(visitor)
+    
+    # Commit the session and handle exceptions
+    try:
+        db.session.commit()
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        db.session.rollback()
+    
+    # If the 'visitor_id' cookie was not set, set it now with the visitor_id from the newly created visitor
+    if not visitor_id:
+        response = make_response()
+        response.set_cookie('visitor_id', visitor.visitor_id, max_age=31536000)  # Expires after 1 year
+        return response
+
+
 
 
 
@@ -248,13 +295,18 @@ def admin():
 @app.route("/admin-home")
 @login_required
 def admin_home():
+    new_visitors = db.session.query(func.count(func.distinct(Visitor.visitor_id))).scalar()
+    traffic = Visitor.query.all()
+    total_traffic = [ num.visit_count for num in traffic]
+    print(f"TOTAL TRAFFIC{total_traffic}")
+    print(f"TOTAL USERS {new_visitors}")
     print(f"CURRENT USERRR{current_user}")
     if not hasattr(current_user, 'is_admin') or not current_user.is_admin:
         return "Unathorized Access"
 
     if current_user.is_authenticated:
 
-        return render_template("home/index.html", segment="index")
+        return render_template("home/index.html", segment="index", users_visited=new_visitors)
     elif not current_user.is_admin:
         logging.warning(f"Unauthorized access to admin panel by user: {current_user.username}")
     else:

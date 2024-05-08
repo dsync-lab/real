@@ -5,6 +5,7 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 
 # Function that initializes the db and creates the tables
+
 def db_init(app):
     db.init_app(app)
     login_manager.init_app(app)
