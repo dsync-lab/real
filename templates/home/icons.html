@@ -935,6 +935,7 @@
 <!-- Specific JS goes HERE --> 
 {% block javascripts %}
 
-<script src="static/admin/static/assets/vendor/clipboard/dist/clipboard.min.js"></script>
+<script src="{{ url_for('static', filename='admin/static/assets/vendor/clipboard/dist/clipboard.min.js') }}"></script>
+
 
 {% endblock javascripts %}

@@ -24,13 +24,14 @@ from jinja2 import TemplateNotFound
 import logging
 import hashlib
 from sqlalchemy import func
+import uuid
 
 
 
 app = Flask(__name__, static_url_path='/static', static_folder='static')
 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test-14.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test-16.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = secrets.token_urlsafe(24)
 app.config['UPLOAD_FOLDER'] = 'static/assets/uploads'
@@ -38,55 +39,38 @@ migrate = Migrate(app, db)
 db_init(app)
 
 
-def hash_ip(ip_address):
-    # Use SHA-256 to hash the IP address
-    return hashlib.sha256(ip_address.encode()).hexdigest()
-
-def generate_unique_visitor_id():
-    return str(uuid.uuid4())
-
-
-@app.before_request
-def before_request():
-    # Check if the 'visitor_id' cookie is set
-    visitor_id = request.cookies.get('visitor_id')
-    
-    if visitor_id:
-        # Cookie is set, update the visit count for this visitor
-        visitor = Visitor.query.filter_by(visitor_id=visitor_id).first()
-        if visitor:
-            visitor.visit_count += 1
-        else:
-            # This should not happen, but handle the case where visitor_id cookie is set but not found in DB
-            visitor = Visitor(visitor_id=visitor_id)
-            db.session.add(visitor)
-    else:
-        # Cookie is not set, create a new visitor record with a unique visitor_id
-        visitor = Visitor()
-        db.session.add(visitor)
-    
-    # Commit the session and handle exceptions
-    try:
-        db.session.commit()
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        db.session.rollback()
-    
-    # If the 'visitor_id' cookie was not set, set it now with the visitor_id from the newly created visitor
-    if not visitor_id:
-        response = make_response()
-        response.set_cookie('visitor_id', visitor.visitor_id, max_age=31536000)  # Expires after 1 year
-        return response
-
-
-
-
-
 
 @app.route("/")
 def home():
+    visitor_id = request.cookies.get("visitor_id")
+    if visitor_id is None:
+        visitor_id = str(uuid.uuid4())
+        response = make_response(f"New visitor, your id is {visitor_id}")
+        response.set_cookie("visitor_id", visitor_id, max_age=60*60*24*365*2)
+        time_visited = datetime.now()
+        new_visitor = Visitor(visitor_id=visitor_id, time_visited=time_visited)
+        db.session.add(new_visitor)
+        db.session.commit()
+        print(f"DEBUGGGGG {visitor_id}")
+    else:
+        exisiting_visitor = Visitor.query.filter_by(visitor_id=visitor_id).first()
+        print(f"Existing Visitor {exisiting_visitor}")
+        if exisiting_visitor:
+            exisiting_visitor.visit_count += 1
+            exisiting_visitor.time_visited = datetime.now()
+            db.session.commit()
+        else:
+            time_visited = datetime.now()
+            new_visitor = Visitor(visitor_id=visitor_id, time_visited=time_visited)
+            db.session.add(new_visitor)
+            db.session.commit()
+
+
+
+
     properties_for_sale = Property.query.filter_by(property_status='For Sale').limit(3).all()
     latest_properties = Property.query.order_by(Property.upload_date.desc()).limit(10).all()
+    
     print(f"LATEST PROPERTIES{latest_properties}")
 
     image_list = []
@@ -98,19 +82,22 @@ def home():
 
     view_images = [first_item.image_path.split("static/", 1)[1] for first_item in image_list]
     print(f"IMAGE TO VIEW {view_images}")
+     
+    latest_item = {
 
-    new_property_image = []
+    }
+    new_property_image = {}
     for property in latest_properties:
         print(f'home Property ID{property.id}')
         images = PropertyImage.query.filter_by(property_id=property.id).all()
         if images:
-            new_property_image.append(images[0])
+            new_property_image[property] = images[0].image_path.split("static/", 1)[1]
 
-    view_latest_images = [first_item.image_path.split("static/", 1)[1] for first_item in new_property_image]
-    print(f"Latest Images {view_latest_images}")
+    # view_latest_images = [first_item.image_path.split("static/", 1)[1] for first_item in new_property_image]
+    print(f"Latest Images {new_property_image}")
 
 
-    return render_template("index.html", properties_for_sale=properties_for_sale, latest_properties=latest_properties, images=view_images, latest_property_image=view_latest_images)
+    return render_template("index.html", properties_for_sale=properties_for_sale, latest_properties=new_property_image, images=view_images)
 
 @app.route("/about")
 def about():
@@ -164,7 +151,7 @@ def rent_property():
     properties = Property.query.filter_by(property_status="For Rent").all()
     image_list = []
     page = request.args.get('page', 1, type=int)
-    per_page = 9
+    per_page = 9 
     start = (page - 1) * per_page
     end = start + per_page
     total_pages = (len(properties) + per_page - 1) // per_page
@@ -296,8 +283,12 @@ def admin():
 @login_required
 def admin_home():
     new_visitors = db.session.query(func.count(func.distinct(Visitor.visitor_id))).scalar()
+    print(f"ALL VISITOR COUNT {new_visitors}")
     traffic = Visitor.query.all()
     total_traffic = [ num.visit_count for num in traffic]
+    traffic = 0
+    for i in total_traffic:
+        traffic += i
     print(f"TOTAL TRAFFIC{total_traffic}")
     print(f"TOTAL USERS {new_visitors}")
     print(f"CURRENT USERRR{current_user}")
@@ -306,7 +297,7 @@ def admin_home():
 
     if current_user.is_authenticated:
 
-        return render_template("home/index.html", segment="index", users_visited=new_visitors)
+        return render_template("home/index.html", segment="index", users_visited=new_visitors, traffic=traffic)
     elif not current_user.is_admin:
         logging.warning(f"Unauthorized access to admin panel by user: {current_user.username}")
     else:
@@ -431,8 +422,9 @@ def get_segment(request):
     except:
         return None
 
-@login_required
+
 @app.route("/profile")
+@login_required
 def admin_profile():
     if current_user.is_authenticated:
     
@@ -442,12 +434,14 @@ def admin_profile():
 
 
 
-@login_required
+
 @app.route("/property-upload", methods=['GET', 'POST'])
+@login_required
 def add_property():
     if request.method == 'POST':
         name = request.form['name']
         price = request.form['price']
+        property_description = request.form['property_description']
         address = request.form['address']
         property_status = request.form['status']
         area = request.form['area']
@@ -468,6 +462,7 @@ def add_property():
             new_property = Property(
                 name=name, 
                 price=price, 
+                property_description=property_description,
                 address=address, 
                 upload_date=upload_date,
                 property_status=property_status,
@@ -505,17 +500,6 @@ def add_property():
             print(f"Error adding property: {str(e)}")
             flash('Error adding property. Please try again', 'error')
     return render_template('add_property.html', segment="add_property") 
-
-# @app.route('/show_property/<int:property_id>')
-# def show_property(property_id):
-#     property_data = Property.query.get_or_404(property_id)
-#     images = PropertyImage.query.filter_by(property_id=property_id).all()
-#     for image in images:
-#         current_image_path = image.image_path
-#         formatted_path = current_image_path.split("static/", 1)[1]
-        
-
-#     return render_template('view_property.html', property_data=property_data, image=image, image_path=formatted_path)
 
 
 def is_image_valid(image_path, image_min_size, image_max_size, min_width, min_height, max_width, max_height):
@@ -603,22 +587,61 @@ def upload_image(property_id, image_data, property_folder):
     else:
         return False
 
-@login_required
+
 @app.route('/all-properties')
+@login_required
 def all_properties():
     properties = Property.query.all()
-    image_list = []
+    image_dict = {}
+    page = request.args.get('page', 1, type=int)
+    per_page = 9
+    start = (page - 1) * per_page
+    end = start + per_page
+    total_pages = (len(properties) + per_page - 1) // per_page
+
+ 
+    property_on_page = properties[start:end]
+
+
     for property in properties:
         print(f'admin Property ID{property.id}')
         images = PropertyImage.query.filter_by(property_id=property.id).all()
         if images:
-            image_list.append(images)
-    print(f'admin All images{image_list}')
+            image_dict[property.id] = images[0].image_path.split("static/", 1)[1]
+    
     # view_images = [first_item.image_path.split("static/", 1)[1] for first_item in image_list]
-    return render_template('home/tables.html', properties=properties, images=image_list, segment="all_properties")
+    return render_template('home/tables.html', properties=property_on_page, images=image_dict, segment="all_properties", total_pages=total_pages, page=page)
 
+
+
+
+@app.route('/edit-property/<int:id>', methods=['GET', 'POST'])
 @login_required
+def edit_property(id):
+    print(f"PROPERTY ID____ {id}")
+    property = Property.query.get_or_404(id)
+    images = PropertyImage.query.filter_by(property_id=id).all()
+    image_list = []
+    for image in images:
+        image_list.append(image.image_path.split("static/", 1)[1])
+    print(image_list)
+    if request.method == 'POST':
+        property.name = request.form['name']
+        property.price = request.form['price']
+        property.property_description = request.form['property_description']
+        property.address = request.form['address']
+        property.status = request.form['property_status']
+        property.area = request.form['area']
+        property.bathroom = request.form['bathroom']
+        property.garage  = request.form['garage']
+        property.property_type = request.form['property_type']
+        db.session.commit()
+        flash("Property updated")
+        return redirect(url_for('all_properties'))
+    return render_template('home/edit_property.html', segment='edit_property', property=property, images=image_list)    
+
 @app.route('/all-properties/delete/<int:id>')
+@login_required
 def delete_property(id):
     try:
         property = Property.query.get_or_404(id)
@@ -665,8 +688,8 @@ def internal_error(error):
 
 
 if __name__=="__main__": 
-    app.run(debug=True, host="192.168.187.157")
+    app.run(debug=True)
 
 
 # jason2 dingidhgiW£$$  dingidhgiW£$$
-#jason difjidfhd&i44
+#jason difjidfhd&i44 

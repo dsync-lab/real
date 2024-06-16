@@ -158,11 +158,11 @@
 
       <div id="property-carousel" class="swiper">
         <div class="swiper-wrapper">
-          {% for property in latest_properties %}
-          {% if property.id < 4 %} <div class="carousel-item-b swiper-slide">
+          {% for property, image_path in latest_properties.items() %}
+          {% if property.id < 4%} <div class="carousel-item-b swiper-slide">
             <div class="card-box-a card-shadow">
               <div class="img-box-a">
-                <img src="{{ url_for('static', filename=latest_property_image[property.id - 1]) }}" alt="Property Image"
+                <img src="{{ url_for('static', filename=image_path) }}" alt="Property Image"
                   class="img-a img-fluid">
               </div>
               <div class="card-overlay">
@@ -175,7 +175,7 @@
                   </div>
                   <div class="card-body-a">
                     <div class="price-box d-flex">
-                      <span class="price-a">For {{ property.status }} | ${{ property.price }}</span>
+                      <span class="price-a">{{ property.property_status }} | ${{ property.price }}</span>
                     </div>
                     <a href="{{ url_for('view_property', property_id=property.id) }}" class="link-a">Click here to view
                       <span class="bi bi-chevron-right"></span>

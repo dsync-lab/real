@@ -27,6 +27,7 @@ class Property(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     price = db.Column(db.String(10), nullable=False)
+    property_description = db.Column(db.Text, nullable=False)
     address = db.Column(db.String(200), nullable=False)
     upload_date = db.Column(db.String(200), nullable=False)
     property_status = db.Column(db.String(10), nullable=False)
@@ -51,11 +52,8 @@ class Visitor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     visitor_id = db.Column(db.String(36), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
     visit_count = db.Column(db.Integer, default=1)
+    time_visited = db.Column(db.String(100))
 
-    def __init__(self, **kwargs):
-        super(Visitor, self).__init__(**kwargs)
-        if not self.visitor_id:
-            self.visitor_id = str(uuid.uuid4())
 
     def __repr__(self):
         return f'<Visitor {self.visitor_id}>'
