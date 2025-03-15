@@ -54,7 +54,7 @@
         </div>
 
         <div class="card-body">
-            <form method="POST" action="/edit-property" enctype="multipart/form-data">
+            <form method="POST" action="{{ url_for('edit_property', id=id) }}" enctype="multipart/form-data">
                 <div class="pl-lg-4">
                     <div class="row">
                         <div class="col-lg-6">
@@ -66,6 +66,10 @@
                           </div>
                         </div>
                         <div class="col-lg-6">
+                            <div class="col-lg-6">
+                                <label>Choose Images: </label>
+                                <input type="file" name="files[]" id="fileInput" class="form-control" multiple required>
+                            </div>
                             <div class="form-group">
                                 <label class="form-control-label" for="name">Property Name</label>
                                 <input type="text" id="input-username" class="form-control" value="{{ property.name }}" name="name" 
@@ -133,6 +137,13 @@
                                     value="{{ property.address }}" type="text">
                             </div>
                         </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label" for="map_view">Map</label>
+                                <input id="map_view" class="form-control" name="map_view" placeholder="Google Map"
+                                value="{{ property.map_view }}"type="text">
+                            </div>
+                        </div>
                     </div>
                    
                 </div>
@@ -179,25 +190,7 @@
 
 
 
-    <script>
-        $(document).ready(function () {
-            // File type validation
-            $("#fileInput").change(function () {
-                var fileLength = this.files.length;
-                var match = ["image/jpeg", "image/png", "image/jpg", "image/gif"];
-                var i;
-                for (i = 0; i < fileLength; i++) {
-                    var file = this.files[i];
-                    var imagefile = file.type;
-                    if (!((imagefile == match[0]) || (imagefile == match[1]) || (imagefile == match[2]) || (imagefile == match[3]))) {
-                        alert('Please select a valid image file (JPEG/JPG/PNG/GIF).');
-                        $("#fileInput").val('');
-                        return false;
-                    }
-                }
-            });
-        });
-    </script>
+
 </body>
 {% include "includes/footer.html" %}
 

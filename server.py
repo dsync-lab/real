@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, flash, redirect, url_for, session, make_response
-from models import Property, PropertyImage, Users, Visitor
+from models import Property, PropertyImage, Users, Visitor, Agent, AgentImage
 from db import db_init, db, login_manager
 import secrets
 import os  
@@ -78,8 +78,9 @@ def home():
         print(f'home Property ID{property.id}')
         images = PropertyImage.query.filter_by(property_id=property.id).all()
         if images:
-            image_list.append(images[0])
+            image_list.append(images[1])
 
+    # image_list = image_list[1:]
     view_images = [first_item.image_path.split("static/", 1)[1] for first_item in image_list]
     print(f"IMAGE TO VIEW {view_images}")
      
@@ -91,7 +92,7 @@ def home():
         print(f'home Property ID{property.id}')
         images = PropertyImage.query.filter_by(property_id=property.id).all()
         if images:
-            new_property_image[property] = images[0].image_path.split("static/", 1)[1]
+            new_property_image[property] = images[1].image_path.split("static/", 1)[1]
 
     # view_latest_images = [first_item.image_path.split("static/", 1)[1] for first_item in new_property_image]
     print(f"Latest Images {new_property_image}")
@@ -132,7 +133,7 @@ def buy_property():
             print('Error occurred while querying image ')
         
         if images:
-            image_list.append(images[0])
+            image_list.append(images[1])
     print(f"IMAGE LISTTTTTT {image_list}")
     image_query = {}
     for element in image_list:
@@ -162,7 +163,7 @@ def rent_property():
         print(f'Property ID{property.id}')
         images = PropertyImage.query.filter_by(property_id=property.id).all()
         if images:
-            image_list.append(images[0])
+            image_list.append(images[1])
 
     image_query = {}
     for element in image_list:
@@ -182,7 +183,13 @@ def view_property(property_id):
     
 
     images = PropertyImage.query.filter_by(property_id=property_id).all()
+    agent_data = Agent.query.get_or_404(property_id)
+    print(f'agent data: {agent_data}')
+
+    
+    # images = images[1:]
     if images:
+        
 
         
 
@@ -190,9 +197,9 @@ def view_property(property_id):
         #     images = PropertyImage.query.filter_by(property_id=property.id).all()
         # except Exception as e:
         #     print('Error occurred while querying image ')
-        print(images)
         print(f'Queried images {images}')
         formatted_image_path = []
+        
 
         print(f'&&&&&& {property_data}')
         for image in images:
@@ -203,12 +210,16 @@ def view_property(property_id):
             
 
         if property_data:
-            return render_template("property-single.html", property_data=property_data, source="Buy", route="buy_property", image=image, image_path=formatted_image_path) 
+            agent_image = formatted_image_path[0]
+            the_image_path= formatted_image_path[1:]
+            print(f'this is IMAGES {agent_image}')
+
+            return render_template("property-single.html", property_data=property_data, agent_data=agent_data,source="Buy", route="buy_property", image=image, agent_image=agent_image,image_path=the_image_path) 
         else:
             return "Property not found", 404
     else:
         print("Error occurred while quering image")
-        return render_template("property-single.html", property_data=property_data, source="Buy", route="buy_property", image=None, image_path=None) 
+        return render_template("property-single.html", property_data=property_data, source="Buy", route="buy_property", agent_image=None,image=None, image_path=None) 
 
 
 @app.route("/rent-view/<int:rent_property_id>")
@@ -435,6 +446,7 @@ def admin_profile():
 
 
 
+
 @app.route("/property-upload", methods=['GET', 'POST'])
 @login_required
 def add_property():
@@ -443,6 +455,7 @@ def add_property():
         price = request.form['price']
         property_description = request.form['property_description']
         address = request.form['address']
+        map_view = request.form['map_view']
         property_status = request.form['status']
         area = request.form['area']
         bathroom = request.form['bathroom']
@@ -464,6 +477,7 @@ def add_property():
                 price=price, 
                 property_description=property_description,
                 address=address, 
+                map_view=map_view,
                 upload_date=upload_date,
                 property_status=property_status,
                 area=area,
@@ -480,6 +494,8 @@ def add_property():
            
 
             property_id = new_property.id
+            print(f'PROPERTY ADDED NOW {new_property}')
+            print(f'Property ID ADDED NOW {new_property.id}')
            
             files = request.files.getlist('files[]')
             
@@ -500,6 +516,62 @@ def add_property():
             print(f"Error adding property: {str(e)}")
             flash('Error adding property. Please try again', 'error')
     return render_template('add_property.html', segment="add_property") 
+
+
+@app.route("/agent-upload", methods=['GET', 'POST'])
+@login_required
+def add_agent():
+    if request.method == 'POST':
+        name=request.form['name']
+        phone=request.form['phone']
+        email=request.form['email']
+        description = request.form['description']
+        instagram = request.form['instagram']
+        linkedin = request.form['linkedin']
+        facebook = request.form['facebook']
+
+     
+        
+
+
+        new_agent = Agent(
+            name=name,
+            email=email,
+            phone=phone,
+            description=description,
+            instagram=instagram,
+            linkedin=linkedin,
+            facebook=facebook,
+            image='nil'
+        )
+
+
+        try: 
+            db.session.add(new_agent)
+            db.session.commit()
+           
+            agent_id = new_agent.id
+
+           
+            files = request.files.getlist('files[]')
+            
+
+            # Create a folder for each property to organize images
+            agent_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(agent_id))
+            for image_data in files:
+                if image_data:
+                    result = upload_image(agent_id, image_data, agent_folder)
+                    print(result)
+            if result:
+                
+                flash('Agent added successfully')
+            else:
+                flash("Image dimensions are too Small/Large")
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error adding agent: {str(e)}")
+            flash('Error adding agent. Please try again', 'error')
+    return render_template('add_agent.html', segment="add_agent") 
 
 
 def is_image_valid(image_path, image_min_size, image_max_size, min_width, min_height, max_width, max_height):
@@ -626,19 +698,45 @@ def edit_property(id):
         image_list.append(image.image_path.split("static/", 1)[1])
     print(image_list)
     if request.method == 'POST':
-        property.name = request.form['name']
-        property.price = request.form['price']
-        property.property_description = request.form['property_description']
-        property.address = request.form['address']
-        property.status = request.form['property_status']
-        property.area = request.form['area']
-        property.bathroom = request.form['bathroom']
-        property.garage  = request.form['garage']
-        property.property_type = request.form['property_type']
-        db.session.commit()
-        flash("Property updated")
+        property.name = request.form.get('name')
+        property.price = request.form.get('price')
+        property.property_description = request.form.get('property_description')
+        property.address = request.form.get('address')
+        property.map_view = request.form.get('map_view')
+        property.property_status = request.form.get('status')
+        property.area = request.form.get('area')
+        property.bathroom = request.form.get('bathroom')
+        property.garage = request.form.get('garage')
+        property.property_type = request.form.get('property_type')
+
+        # Debugging: Print form data
+        print("Form data received:", request.form)
+
+        try:
+            db.session.add(property) 
+            db.session.commit()
+            
+            files = request.files.getlist('files[]')
+            print("FILES RECEIVED: ", files)
+
+            if files:
+                property_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(property.id))
+                os.makedirs(property_folder, exist_ok=True)
+
+                for image_data in files:
+                    if image_data and image_data.filename != '':
+                        result = upload_image(property.id, image_data, property_folder)
+                        print("UPLOAD RESULT:", result)
+                        
+                        
+
+            flash("Your changes has been successfully applied")
+        except Exception as e:
+            db.session.rollback()
+            flash('Error updating property')
+            print(f'error updating property: {e}')
         return redirect(url_for('all_properties'))
-    return render_template('home/edit_property.html', segment='edit_property', property=property, images=image_list)    
+    return render_template('home/edit_property.html', segment='edit_property', property=property, images=image_list, id=id)    
 
 @app.route('/all-properties/delete/<int:id>')
 @login_required
@@ -691,5 +789,9 @@ if __name__=="__main__":
     app.run(debug=True)
 
 
-# jason2 dingidhgiW£$$  dingidhgiW£$$
-#jason difjidfhd&i44 
+# jason2 dingidhgiW£$$  dingidhgiW£$
+
+#  jefnu%£##S434
+
+
+

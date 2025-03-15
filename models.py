@@ -15,13 +15,16 @@ class Agent(db.Model):
     instagram = db.Column(db.String(100))
     linkedin = db.Column(db.String(100))
     facebook = db.Column(db.String(100))
-    properties = db.relationship('Property', backref='agent', lazy=True, uselist=False, cascade='all, delete-orphan')
+
+    properties = db.relationship('Property', backref='agent', lazy=True, cascade='all, delete-orphan')
+    agent_images = db.relationship('AgentImage', backref='agent', lazy=True, cascade='all, delete-orphan')
 
 class AgentImage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     property_id = db.Column(db.Integer, db.ForeignKey('property.id'), nullable=False)
     image_path = db.Column(db.String(100), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey("agent.id"))
 
 class Property(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -29,6 +32,7 @@ class Property(db.Model):
     price = db.Column(db.String(10), nullable=False)
     property_description = db.Column(db.Text, nullable=False)
     address = db.Column(db.String(200), nullable=False)
+    map_view = db.Column(db.String(200), nullable=False)
     upload_date = db.Column(db.String(200), nullable=False)
     property_status = db.Column(db.String(10), nullable=False)
     area = db.Column(db.Float)
