@@ -24,4 +24,3 @@ for filename in os.listdir(input_folder):
 
 
 
-<iframe src="" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
