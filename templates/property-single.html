@@ -141,6 +141,7 @@
                   </div>
                 </div>
                 <div class="amenities-list color-text-a">
+                  {% if property_data.property_type != "Land" %}
                   <ul class="list-a no-margin">
                     <li>Balcony</li>
                     <li>Kitchen</li>
@@ -151,6 +152,7 @@
                     <li>Sun Room</li>
                     <li>Floor to ceiling windows</li>
                   </ul>
+                  {% endif %}
                 </div>
               </div>
             </div>
