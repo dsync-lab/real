@@ -2,8 +2,8 @@ from PIL import Image
 import os
 
 # Folder where your WEBP images are located
-input_folder = "static/assets/abee"
-output_folder = "static/assets/the"
+input_folder = "static/assets/from"
+output_folder = "static/assets/to"
 
 # Create output folder if it doesn't exist
 os.makedirs(output_folder, exist_ok=True)
