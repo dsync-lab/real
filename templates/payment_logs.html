@@ -1,0 +1,115 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %} Dashboard {% endblock title %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}
+<style>
+    .card-custom {
+        box-shadow: 0 0 10px rgba(0,0,0,0.08);
+        border-radius: 12px;
+        overflow: hidden;
+        border: none;
+    }
+
+    .table-custom th {
+        background-color: #343a40;
+        color: white;
+        font-weight: 600;
+    }
+
+    .table-custom tbody tr:hover {
+        background-color: #f1f1f1;
+        transition: 0.3s;
+    }
+
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 5px 10px;
+        border-radius: 20px;
+    }
+
+    .status-success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .status-failed {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card card-custom">
+        <div class="card-body">
+            <h4 class="mb-4">Payment Logs</h4>
+
+            {% if logs %}
+            <div class="table-responsive">
+                <table class="table table-hover table-custom align-middle">
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Invoice ID</th>
+                            <th>Amount</th>
+                            <th>Crypto</th>
+                            <th>Status</th>
+                            <th>Payment Type</th>
+                            <th>Tx Hash</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td><code>{{ log.filename }}</code></td>
+                            <td>{{ log.get('invoice_id', 'N/A') }}</td>
+                            <td>
+                                {% if log.amount is not none %}
+                                    ${{ "{:,.2f}".format(log.amount) }}
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ log.get('crypto', 'N/A') }}</td>
+                            <td>
+                                {% set status = log.get('status', 'N/A') %}
+                                {% if status.lower() == 'success' %}
+                                    <span class="status-badge status-success">Success</span>
+                                {% elif status.lower() == 'failed' %}
+                                    <span class="status-badge status-failed">Failed</span>
+                                {% elif status.lower() == 'pending' %}
+                                    <span class="status-badge status-pending">Pending</span>
+                                {% else %}
+                                    <span class="status-badge bg-secondary text-white">{{ status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ log.get('payment_type', 'N/A') }}</td>
+                            <td>{{ log.get('transaction_hash', 'N/A') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <div class="alert alert-info">No payment logs found.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% include "includes/footer.html" %}
+{% endblock content %}
+
+<!-- Specific JS goes HERE -->
+{% block javascripts %}
+<script src="{{ url_for('static', filename='admin/static/assets/vendor/chart.js/dist/Chart.min.js') }}"></script>
+<script src="{{ url_for('static', filename='admin/static/assets/vendor/chart.js/dist/Chart.extension.js') }}"></script>
+{% endblock javascripts %}

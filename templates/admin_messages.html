@@ -1,0 +1,81 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %} Dashboard {% endblock title %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+<style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .card-custom {
+      border-radius: 16px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .card-header-custom {
+      background-color: #343a40;
+      color: white;
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+      padding: 1rem 1.5rem;
+      font-weight: 600;
+    }
+    .card-body-custom {
+      padding: 1.5rem;
+      background-color: #ffffff;
+    }
+    .label {
+      font-weight: 600;
+      color: #495057;
+    }
+    .message-text {
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="container my-5">
+    <h2 class="mb-4 text-center">📬 User Messages - Admin Panel</h2>
+
+    {% if messages %}
+      <div class="row g-4">
+        {% for msg in messages %}
+          <div class="col-md-6 col-lg-4">
+            <div class="card card-custom">
+              <div class="card-header card-header-custom">
+                {{ msg.name }} <br>
+                <small style="color:#ccc;">{{ msg.email }}</small>
+              </div>
+              <div class="card-body card-body-custom">
+                <p class="label">Message:</p>
+                <p class="message-text">{{ msg.message }}</p>
+
+                <hr>
+                <p class="mb-1"><span class="label">Submitted At:</span> {{ msg.submitted_at }}</p>
+                <p class="mb-0"><span class="label">File:</span> {{ msg.filename }}</p>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="alert alert-info text-center">No messages found yet.</div>
+    {% endif %}
+  </div>
+</body>
+
+{% include "includes/footer.html" %}
+
+{% endblock content %}
+
+<!-- Specific JS goes HERE -->
+{% block javascripts %}
+
+<script src="{{ url_for('static', filename='admin/static/assets/vendor/chart.js/dist/Chart.min.js') }}"></script>
+<script src="{{ url_for('static', filename='admin/static/assets/vendor/chart.js/dist/Chart.extension.js') }}"></script>
+
+
+{% endblock javascripts %}

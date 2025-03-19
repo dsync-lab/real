@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+{% block title %}Payment{% endblock %}
+
+{% block content %}
+<main id="main">
+  <style>
+    .payment-card {
+      border-radius: 1rem;
+      box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.1);
+      background-color: #ffffff;
+      border: 1px solid #e0e0e0;
+    }
+
+    .confirmation-message {
+      display: none;
+    }
+
+    .crypto-logo {
+      height: 20px;
+      width: 20px;
+      margin-right: 8px;
+    }
+
+    .form-select option {
+      padding-left: 28px;
+    }
+
+    .spinner-container {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    .spinner-border {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    .wallet-section {
+      display: none;
+      background-color: #f5f5f5;
+      border-radius: 0.5rem;
+      padding: 15px;
+      margin-bottom: 1rem;
+      border: 1px solid #e0e0e0;
+    }
+
+    .wallet-address-copy {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      word-break: break-word;
+    }
+
+    .copy-icon {
+      cursor: pointer;
+      color: #007bff;
+    }
+
+    .qr-code-img {
+      display: block;
+      margin: 10px auto 0;
+      max-width: 150px;
+    }
+
+    #paymentWaitingMsg {
+      display: none;
+    }
+
+    #transactionHashField {
+      display: none;
+    }
+  </style>
+
+  <div class="container min-vh-100 d-flex align-items-center justify-content-center py-5">
+    <div class="card payment-card p-4 w-100" style="max-width: 500px;">
+      <div class="card-body">
+        <h2 class="card-title text-center mb-3">Pay with Crypto</h2>
+        <p class="text-center text-muted mb-4">
+          Secure your real estate purchase using your preferred cryptocurrency.
+        </p>
+
+        <form id="paymentForm" method="POST">
+          <div class="mb-3">
+            <label for="propertyId" class="form-label">Property ID</label>
+            <input type="text" class="form-control" id="propertyId" value="{{property_id * 39433}}" required />
+          </div>
+
+          <div class="mb-3">
+            <label for="amount" class="form-label">Amount (USD)</label>
+            <input type="number" class="form-control" id="amount" placeholder="e.g. 500000" required />
+            
+          </div>
+
+          <div class="form-group mb-3">
+            <label for="payment_type">Select Payment Type:</label>
+            <select class="form-select" id="payment_type" name="payment_type" required>
+                <option value="">-- Select Payment Type --</option>
+                {% for payment in payment_types %}
+                    <option value="{{ payment }}">{{ payment }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+          <div class="mb-3">
+            <label for="cryptoSelect" class="form-label">Choose Cryptocurrency</label>
+            <select class="form-select" id="cryptoSelect" required>
+              <option disabled selected value="">-- Select a cryptocurrency --</option>
+              {% for key, addr in wallets.items() %}
+                <option value="{{ key }}">{{ key|upper }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div id="walletSection" class="wallet-section">
+            <label class="form-label">Payment Wallet Address</label>
+            <div class="wallet-address-copy">
+              <span id="walletAddressText">-</span>
+              <span class="copy-icon fa fa-copy" title="Copy Address" onclick="copyAddress()"></span>
+            </div>
+            <img src="" alt="QR Code" class="qr-code-img" id="qrCodeImg" />
+          </div>
+            <!-- Invoice Display -->
+        <div id="invoiceDisplay" class="alert alert-light border d-flex align-items-center justify-content-between mb-4">
+          <div>
+            <strong><i class="fas fa-file-invoice"></i> Invoice ID:</strong>
+            <span id="invoiceText" class="ms-2 text-primary" style="font-family: monospace;"></span>
+          </div>
+        </div>
+          <!-- Transaction Hash Input Field -->
+          <div class="mb-3" id="transactionHashField">
+            <label for="transactionHash" class="form-label">Transaction Hash</label>
+            <input type="text" class="form-control" id="transactionHash" placeholder="Paste your transaction hash here" required />
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 mt-2">Submit Payment Details</button>
+        </form>
+        
+
+        <!-- Spinner -->
+        <div class="spinner-container" id="spinner">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Processing...</span>
+          </div>
+        </div>
+
+        <!-- Waiting for Payment Message -->
+        <div id="paymentWaitingMsg" class="text-center mt-3">
+          <div id="paymentWaitingMsg" class="alert alert-info d-flex align-items-center mb-3" style="display:none;">
+            <i class="fas fa-clock me-2"></i> Waiting for payment confirmation...
+          </div>
+          <p class="text-muted small">Please make the payment and paste your transaction hash above, before 5 mintues.</p>
+        
+        </div>
+
+        <!-- Confirmation Message -->
+        <div id="confirmationMessage" class="confirmation-message alert alert-success text-center mt-4">
+          ✅ Thank you! Your crypto payment details have been submitted successfully.
+        </div>
+
+        <div class="text-center mt-4 text-muted small">
+          Powered by Aptos Blockchain | Secure & Transparent
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const walletAddresses = JSON.parse('{{ wallets | tojson | safe }}');
+  
+    function generateInvoiceId() {
+      const timestamp = Date.now();
+      const randomCode = Math.floor(1000 + Math.random() * 9000);
+      return `INV-${timestamp}-${randomCode}`;
+    }
+  
+    document.getElementById("cryptoSelect").addEventListener("change", function () {
+      const selected = this.value;
+      const walletAddress = walletAddresses[selected];
+  
+      if (walletAddress) {
+        document.getElementById("walletSection").style.display = "block";
+        document.getElementById("walletAddressText").innerText = walletAddress;
+        document.getElementById("qrCodeImg").src = `/generate_qr?address=${encodeURIComponent(walletAddress)}`;
+        document.getElementById("qrCodeImg").alt = selected.toUpperCase() + " QR Code";
+  
+        document.getElementById("spinner").style.display = "flex";
+        document.getElementById("paymentWaitingMsg").style.display = "block";
+        document.getElementById("transactionHashField").style.display = "block";
+  
+        const invoiceId = generateInvoiceId();
+        document.getElementById("invoiceText").innerText = invoiceId;
+        document.getElementById("invoiceDisplay").style.display = "flex";
+      }
+    });
+  
+    function copyAddress() {
+      const addressText = document.getElementById("walletAddressText").innerText;
+      navigator.clipboard.writeText(addressText).then(() => {
+        alert("Wallet address copied to clipboard!");
+      });
+    }
+  
+    document.getElementById("paymentForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+  
+      const spinner = document.getElementById("spinner");
+      const confirmationMessage = document.getElementById("confirmationMessage");
+      const paymentWaitingMsg = document.getElementById("paymentWaitingMsg");
+  
+      spinner.style.display = "flex";
+      paymentWaitingMsg.style.display = "block";
+  
+      const data = {
+        propertyId: document.getElementById("propertyId").value,
+        amount: document.getElementById("amount").value,
+        payment_type: document.getElementById("payment_type").value,
+        crypto: document.getElementById("cryptoSelect").value,
+        transaction_hash: document.getElementById("transactionHash").value,
+        invoice_id: document.getElementById("invoiceText").innerText
+      };
+  
+      try {
+        const response = await fetch("{{ url_for('confirm_payment') }}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(data)
+        });
+  
+        if (response.ok) {
+          spinner.style.display = "none";
+          paymentWaitingMsg.style.display = "none";
+          confirmationMessage.style.display = "block";
+  
+          document.getElementById("paymentForm").reset();
+          document.getElementById("walletSection").style.display = "none";
+          document.getElementById("transactionHashField").style.display = "none";
+  
+          setTimeout(() => {
+            confirmationMessage.style.display = "none";
+          }, 4000);
+        } else {
+          alert("Something went wrong. Please try again.");
+          spinner.style.display = "none";
+          paymentWaitingMsg.style.display = "none";
+        }
+  
+      } catch (error) {
+        console.error("Submission error:", error);
+        alert("Network or server error occurred.");
+        spinner.style.display = "none";
+        paymentWaitingMsg.style.display = "none";
+      }
+    });
+  </script>
+  
+  
+</main>
+{% endblock %}
+
+{% set active_page = 'make_payment' %}
+
+
+
+
+
+

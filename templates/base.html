@@ -13,6 +13,7 @@
     <!-- Favicons -->
     <link href="{{ url_for('static', filename='assets/img/WalterPropertiesFavicon/android-chrome-192x192.png') }}" rel="icon">
     <link href="{{ url_for('static', filename='assets/img/WalterPropertiesFavicon/apple-touch-icon.png') }}" rel="apple-touch-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 
     <!-- Google Fonts -->
@@ -157,6 +158,9 @@
 
                     <li class="nav-item">
                         <a class="nav-link {% if active_page == 'rent_property' %}active{% endif %}" href="{{ url_for('rent_property') }}">Rent</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page == 'make_payment' %}active{% endif %}" href="{{ url_for('make_payment', property_id=0) }}">Payment</a>
                     </li>
 
                     <li class="nav-item">

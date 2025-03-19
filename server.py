@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, flash, redirect, url_for, session, make_response
+from flask import Flask, render_template, request, flash, redirect, url_for, session, make_response, send_file, jsonify
 from models import Property, PropertyImage, Users, Visitor, Agent, AgentImage
 from db import db_init, db, login_manager
 import secrets
@@ -11,6 +11,9 @@ from flask_wtf import FlaskForm
 from wtforms.validators import DataRequired
 from datetime import datetime
 import shutil
+import qrcode
+import io
+import json
 from PIL import Image
 from apps.authentication.forms import CreateAccountForm, LoginForm
 from apps.authentication.util import verify_pass
@@ -174,6 +177,88 @@ def rent_property():
 
 
     return render_template("rent-grid.html", properties=property_on_page, images=image_query, total_pages=total_pages, page=page)
+
+wallet_addresses = {
+    "btc": "bc1q46ajyqmnf785sz5zgylsxewlekdhjxk9w44cep",
+    "eth": "0x3c4114773C0f06D28dca5E15bDFD91ea51440523",
+    "ton": "UQBWo8co96EElybOJwYLcaiCmHA1T2BQEqDv7q0wlZ5PCQSg",
+    "usdt(bep20/erc20)": "0x3c4114773C0f06D28dca5E15bDFD91ea51440523",
+    "usdt(trc20)": "TQ2FByBbhbvraWzD96VkqK5AqdD8viUNAc",
+    "sol": "5t8AZR3mBYgtTSM54weRonDx7LezzroULYVFBUeN4gW2", 
+}
+
+
+
+@app.route('/payment/<int:property_id>')
+def make_payment(property_id):
+    payment_types = [
+        "Security Fee",
+        "Agency Fee",
+        "Legal Documentation Fee",
+        "Down Payment",
+        "Inspection Fee",
+        "Reservation Fee",
+        "Installment Payment"
+    ]
+
+    return render_template('payment.html', wallets=wallet_addresses, property_id=property_id, payment_types=payment_types)
+
+@app.route('/confirm_payment', methods=['POST'])
+def confirm_payment():
+    data = request.get_json()
+    print("Payment data received:", data)
+
+    # Create a directory for saving files if it doesn't exist
+    save_dir = os.path.join(os.getcwd(), 'payment_logs')
+    os.makedirs(save_dir, exist_ok=True)
+
+    # Generate a unique filename (e.g., based on invoice_id or timestamp)
+    invoice_id = data.get('invoice_id', 'no_invoice')
+    filename = f"{invoice_id}.json"
+    filepath = os.path.join(save_dir, filename)
+
+    # Save the data to a JSON file
+    with open(filepath, 'w') as json_file:
+        json.dump(data, json_file, indent=4)
+
+
+    # TODO: Save to database or process
+    return jsonify({'status': 'success', 'message': 'Payment received'})
+
+
+
+@app.route('/generate_qr')
+def generate_qr():
+    address = request.args.get("address")
+    if not address:
+        return "No address provided", 400
+
+    # Generate QR code image in memory
+    img = qrcode.make(address)
+    buffer = io.BytesIO()
+    img.save(buffer, format="PNG")
+    buffer.seek(0)
+
+    return send_file(buffer, mimetype='image/png')
+
+@app.route('/submit_message', methods=['POST'])
+def submit_message():
+    data = request.get_json(force=True)
+
+    # Ensure message directory exists
+    messages_dir = os.path.join(os.getcwd(), 'user_messages')
+    os.makedirs(messages_dir, exist_ok=True)
+
+    # Generate unique filename based on timestamp
+    timestamp = data.get("submitted_at", "").replace(":", "-").replace(".", "-")
+    filename = f"message_{timestamp}.json"
+    filepath = os.path.join(messages_dir, filename)
+
+    # Save message to file
+    with open(filepath, 'w') as f:
+        json.dump(data, f, indent=4)
+
+    return jsonify({"status": "success", "message": "Message saved successfully"})
 
 
 @app.route("/property-view/<int:property_id>")
@@ -445,6 +530,52 @@ def admin_profile():
 
 
 
+@app.route('/admin/messages')
+@login_required
+def view_messages():
+    messages_dir = 'user_messages'
+    messages = []
+
+    if os.path.exists(messages_dir):
+        for file_name in sorted(os.listdir(messages_dir), reverse=True):
+            if file_name.endswith('.json'):
+                with open(os.path.join(messages_dir, file_name), 'r') as f:
+                    try:
+                        msg = json.load(f)
+                        msg['filename'] = file_name
+                        messages.append(msg)
+                    except Exception as e:
+                        print(f"Failed to load {file_name}: {e}")
+
+    return render_template('admin_messages.html', messages=messages)
+
+
+@app.route('/payment_logs')
+@login_required
+def payment_logs():
+    logs = []
+    logs_dir = os.path.join(os.getcwd(), 'payment_logs')
+
+    if os.path.exists(logs_dir):
+        for filename in os.listdir(logs_dir):
+            if filename.endswith('.json'):
+                filepath = os.path.join(logs_dir, filename)
+                try:
+                    with open(filepath, 'r') as file:
+                        data = json.load(file)
+
+                        # Ensure proper types for template
+                        try:
+                            data['amount'] = float(data.get('amount', 0))
+                        except (ValueError, TypeError):
+                            data['amount'] = None
+
+                        data['filename'] = filename
+                        logs.append(data)
+                except Exception as e:
+                    print(f"Error reading {filename}: {e}")
+
+    return render_template('payment_logs.html', logs=logs)
 
 
 @app.route("/property-upload", methods=['GET', 'POST'])

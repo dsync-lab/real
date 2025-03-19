@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{% endblock %}
+{% block title %}Contact{% endblock %}
 
 {% block content %}
 
@@ -49,39 +49,33 @@
         <div class="col-sm-12 section-t8">
           <div class="row">
             <div class="col-md-7">
-              <form action="#" method="post" role="form" class="php-email-form">
+              <form id="contactForm" method="POST">
                 <div class="row">
                   <div class="col-md-6 mb-3">
                     <div class="form-group">
-                      <input type="text" name="name" class="form-control form-control-lg form-control-a"
+                      <input type="text" name="name" id="inputName" class="form-control form-control-lg form-control-a"
                         placeholder="Your Name" required>
                     </div>
                   </div>
                   <div class="col-md-6 mb-3">
                     <div class="form-group">
-                      <input name="email" type="email" class="form-control form-control-lg form-control-a"
+                      <input name="email" type="email" id="inputEmail" class="form-control form-control-lg form-control-a"
                         placeholder="Your Email" required>
                     </div>
                   </div>
                   <div class="col-md-12 mb-3">
                     <div class="form-group">
-                      <input type="text" name="subject" class="form-control form-control-lg form-control-a"
+                      <input type="text" name="subject" id="inputSubject" class="form-control form-control-lg form-control-a"
                         placeholder="Subject" required>
                     </div>
                   </div>
                   <div class="col-md-12">
                     <div class="form-group">
-                      <textarea name="message" class="form-control" name="message" cols="45" rows="8"
+                      <textarea name="message" id="textMessage" class="form-control" name="message" cols="45" rows="8"
                         placeholder="Message" required></textarea>
                     </div>
                   </div>
-                  <div class="col-md-12 my-3">
-                    <div class="mb-3">
-                      <div class="loading">Loading</div>
-                      <div class="error-message"></div>
-                      <div class="sent-message">Your message has been sent. Thank you!</div>
-                    </div>
-                  </div>
+                  
 
                   <div class="col-md-12 text-center">
                     <button type="submit" class="btn btn-a">Send Message</button>
@@ -100,10 +94,7 @@
                   </div>
                   <div class="icon-box-content">
                     <p class="mb-1">Email.
-                      <span class="color-a">contact@example.com</span>
-                    </p>
-                    <p class="mb-1">Phone.
-                      <span class="color-a">+54 356 945234</span>
+                      <span class="color-a">walterpropertiesrealtor@gmail.com</span>
                     </p>
                   </div>
                 </div>
@@ -166,7 +157,44 @@
       </div>
     </div>
   </section><!-- End Contact Single-->
+  <script>
+    document.getElementById("contactForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
 
+      const name = document.getElementById("inputName").value;
+      const email = document.getElementById("inputEmail").value;
+      const subject = document.getElementById("inputSubject").value;
+      const message = document.getElementById("textMessage").value;
+
+      const formData = {
+        name: name,
+        email: email,
+        subject: subject,
+        message: message,
+        submitted_at: new Date().toISOString()
+      };
+
+      try {
+        const response = await fetch("/submit_message", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+          alert("Message sent successfully!");
+          document.getElementById("contactForm").reset();
+        } else {
+          alert("Failed to send message. Please try again.");
+        }
+      } catch (err) {
+        console.error("Error submitting message:", err);
+        alert("An error occurred. Please try again.");
+      }
+    });
+  </script>
 </main><!-- End #main -->
 
 {% endblock %}
