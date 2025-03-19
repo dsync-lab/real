@@ -6,4 +6,5 @@ Flask-Login
 SQLAlchemy
 Pillow
 python-slugify
+qrcode
 gunicorn
