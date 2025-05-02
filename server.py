@@ -201,7 +201,7 @@ def make_payment(property_id):
         "Installment Payment"
     ]
 
-    return render_template('payment.html', wallets=wallet_addresses, property_id=property_id, payment_types=payment_types)
+    return render_template('payment_bank.html', wallets=wallet_addresses, property_id=property_id, payment_types=payment_types)
 
 @app.route('/confirm_payment', methods=['POST'])
 def confirm_payment():

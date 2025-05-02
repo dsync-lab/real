@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Payment{% endblock %}
+
+{% block content %}
+<main id="main">
+  <style>
+    .payment-card {
+      border-radius: 1rem;
+      box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.1);
+      background-color: #ffffff;
+      border: 1px solid #e0e0e0;
+    }
+
+    .confirmation-message {
+      display: none;
+    }
+
+    .spinner-container {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    .spinner-border {
+      width: 2rem;
+      height: 2rem;
+    }
+  </style>
+
+ 
+  <div class="container min-vh-100 d-flex align-items-center justify-content-center py-5">
+    <div class="card payment-card p-4 w-100" style="max-width: 500px;">
+      <div class="card-body">
+        <h2 class="card-title text-center mb-3">Pay via Bank Transfer</h2>
+        <p class="text-center text-muted mb-4">
+          Please make a bank transfer using the details below and submit your payment reference.
+        </p>
+
+        <form id="paymentForm" method="POST">
+          <div class="mb-3">
+            <label for="propertyId" class="form-label">Property ID</label>
+            <input type="text" class="form-control" id="propertyId" value="{{property_id * 39433}}" required />
+          </div>
+
+          <div class="mb-3">
+            <label for="amount" class="form-label">Amount (£)</label>
+            <input type="number" class="form-control" id="amount" placeholder="e.g. 500000" required />
+          </div>
+
+          <div class="alert alert-light border mb-4">
+            <strong>Bank Name:</strong> C24 Bank <br>
+            <strong>Account Name:</strong> Lara Yücel<br>
+            <strong>IBAN:</strong> DE83500240243153575001<br>
+            <strong>BIC:</strong> DEFFDEFFXXX<br>
+            <strong>Reference:</strong><span id="" class="text-primary" style="font-family: monospace;"> Yucel </span>
+          </div>
+
+          <div class="mb-3">
+            <label for="payerName" class="form-label">Your Full Name</label>
+            <input type="text" class="form-control" id="payerName" placeholder="Name used in bank transfer" required />
+          </div>
+
+          <div class="mb-3">
+            <label for="paymentReference" class="form-label">Payment Reference / Receipt ID</label>
+            <input type="text" class="form-control" id="paymentReference" placeholder="Bank transaction reference" required />
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 mt-2">Submit Payment Details</button>
+        </form>
+
+        <div class="spinner-container" id="spinner">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Processing...</span>
+          </div>
+        </div>
+
+        <div id="confirmationMessage" class="confirmation-message alert alert-success text-center mt-4">
+          ✅ Thank you! Your bank transfer details have been submitted successfully.
+        </div>
+
+        <div class="text-center mt-4 text-muted small">
+          Secure Payment | Real Estate Platform
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function generateInvoiceId() {
+      const timestamp = Date.now();
+      const randomCode = Math.floor(1000 + Math.random() * 9000);
+      return `INV-${timestamp}-${randomCode}`;
+    }
+
+    // Generate invoice ID on load
+    document.addEventListener("DOMContentLoaded", function () {
+      const invoiceId = generateInvoiceId();
+      document.getElementById("invoiceText").innerText = invoiceId;
+    });
+
+    document.getElementById("paymentForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const spinner = document.getElementById("spinner");
+      const confirmationMessage = document.getElementById("confirmationMessage");
+
+      spinner.style.display = "flex";
+
+      const data = {
+        propertyId: document.getElementById("propertyId").value,
+        amount: document.getElementById("amount").value,
+        payer_name: document.getElementById("payerName").value,
+        reference: document.getElementById("paymentReference").value,
+        invoice_id: document.getElementById("invoiceText").innerText
+      };
+
+      try {
+        const response = await fetch("{{ url_for('confirm_payment') }}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+          spinner.style.display = "none";
+          confirmationMessage.style.display = "block";
+
+          document.getElementById("paymentForm").reset();
+
+          setTimeout(() => {
+            confirmationMessage.style.display = "none";
+          }, 4000);
+        } else {
+          alert("Something went wrong. Please try again.");
+          spinner.style.display = "none";
+        }
+
+      } catch (error) {
+        console.error("Submission error:", error);
+        alert("Network or server error occurred.");
+        spinner.style.display = "none";
+      }
+    });
+  </script>
+</main>
+{% endblock %}
+
+{% set active_page = 'make_payment' %}
