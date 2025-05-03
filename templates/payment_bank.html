@@ -2,6 +2,9 @@
 {% block title %}Payment{% endblock %}
 
 {% block content %}
+
+
+
 <main id="main">
   <style>
     .payment-card {
@@ -10,44 +13,97 @@
       background-color: #ffffff;
       border: 1px solid #e0e0e0;
     }
-
     .confirmation-message {
       display: none;
     }
-
     .spinner-container {
       display: none;
       justify-content: center;
       align-items: center;
       margin-top: 20px;
     }
-
     .spinner-border {
       width: 2rem;
       height: 2rem;
     }
   </style>
 
- 
   <div class="container min-vh-100 d-flex align-items-center justify-content-center py-5">
     <div class="card payment-card p-4 w-100" style="max-width: 500px;">
       <div class="card-body">
         <h2 class="card-title text-center mb-3">Pay via Bank Transfer</h2>
         <p class="text-center text-muted mb-4">
           Please make a bank transfer using the details below and submit your payment reference.
+          10247 Berlin Friedrichshain
         </p>
 
         <form id="paymentForm" method="POST">
+          <!-- Invoice ID -->
+          <div class="mb-3 text-center">
+            <label class="form-label"><strong>Invoice ID:</strong></label>
+            <div id="invoiceText" class="fw-bold"></div>
+          </div>
+
+          <!-- Hidden Base Rate for JS -->
+          <input
+            type="hidden"
+            id="baseRate"
+            value="{{ property_data.price }}"
+          />
+
+          <!-- Property ID -->
           <div class="mb-3">
             <label for="propertyId" class="form-label">Property ID</label>
-            <input type="text" class="form-control" id="propertyId" value="{{property_id * 39433}}" required />
+            <input
+              type="text"
+              class="form-control"
+              id="propertyId"
+              value="{{ property_id * 39433 }}"
+              readonly
+            />
           </div>
 
+          <!-- Standard Daily Rate -->
           <div class="mb-3">
-            <label for="amount" class="form-label">Amount (£)</label>
-            <input type="number" class="form-control" id="amount" placeholder="e.g. 500000" required />
+            <label class="form-label">Standard Daily Rate</label>
+            <div class="input-group">
+              <span class="input-group-text">£{{ property_data.price }}</span>
+              <span class="input-group-text">/ day</span>
+            </div>
           </div>
 
+          <!-- Stay Duration -->
+          <div class="mb-3">
+            <label for="stayDuration" class="form-label">Stay Duration</label>
+            <div class="input-group">
+              <input
+                type="number"
+                id="stayDuration"
+                name="duration"
+                class="form-control"
+                min="1"
+                value="1"
+                required
+              />
+              <span class="input-group-text">days</span>
+            </div>
+            <div class="form-text">
+              Please enter the number of days you wish to stay.
+            </div>
+          </div>
+
+          <!-- Total Amount -->
+          <div class="mb-3">
+            <label for="totalAmount" class="form-label">Total Amount (£)</label>
+            <input
+              type="text"
+              id="totalAmount"
+              name="total_price"
+              class="form-control-plaintext"
+              value="{{ property_data.price }}"
+              readonly
+            />
+          </div>
           <div class="alert alert-light border mb-4">
             <strong>Bank Name:</strong> C24 Bank <br>
             <strong>Account Name:</strong> Lara Yücel<br>
@@ -56,31 +112,50 @@
             <strong>Reference:</strong><span id="" class="text-primary" style="font-family: monospace;"> Yucel </span>
           </div>
 
+          <!-- Payer Name -->
           <div class="mb-3">
             <label for="payerName" class="form-label">Your Full Name</label>
-            <input type="text" class="form-control" id="payerName" placeholder="Name used in bank transfer" required />
+            <input
+              type="text"
+              class="form-control"
+              id="payerName"
+              placeholder="Name used in bank transfer"
+              required
+            />
           </div>
 
+          <!-- Payment Reference -->
           <div class="mb-3">
             <label for="paymentReference" class="form-label">Payment Reference / Receipt ID</label>
-            <input type="text" class="form-control" id="paymentReference" placeholder="Bank transaction reference" required />
+            <input
+              type="text"
+              class="form-control"
+              id="paymentReference"
+              placeholder="Bank transaction reference"
+              required
+            />
           </div>
 
-          <button type="submit" class="btn btn-primary w-100 mt-2">Submit Payment Details</button>
+          <button type="submit" class="btn btn-primary w-100 mt-2">
+            Submit Payment Details
+          </button>
         </form>
 
+        <!-- Spinner & Confirmation -->
         <div class="spinner-container" id="spinner">
           <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Processing...</span>
           </div>
         </div>
-
-        <div id="confirmationMessage" class="confirmation-message alert alert-success text-center mt-4">
+        <div
+          id="confirmationMessage"
+          class="confirmation-message alert alert-success text-center mt-4"
+        >
           ✅ Thank you! Your bank transfer details have been submitted successfully.
         </div>
 
         <div class="text-center mt-4 text-muted small">
-          Secure Payment | Real Estate Platform
+          Secure Payment | Walter Properties
         </div>
       </div>
     </div>
@@ -88,64 +163,74 @@
 
   <script>
     function generateInvoiceId() {
-      const timestamp = Date.now();
+      const timestamp  = Date.now();
       const randomCode = Math.floor(1000 + Math.random() * 9000);
       return `INV-${timestamp}-${randomCode}`;
     }
 
-    // Generate invoice ID on load
+    function updatePaymentAmount() {
+      let raw = document.getElementById("baseRate").value || "0";
+      const baseRate = parseFloat(raw.replace(/,/g, "")) || 0;
+      const days     = parseInt(document.getElementById("stayDuration").value, 10) || 0;
+      const total    = (baseRate * days).toFixed(2);
+
+      document.getElementById("totalAmount").value = total;
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
-      const invoiceId = generateInvoiceId();
-      document.getElementById("invoiceText").innerText = invoiceId;
+      // Generate & show Invoice ID
+      document.getElementById("invoiceText").innerText = generateInvoiceId();
+
+      // Initial total calc
+      updatePaymentAmount();
+
+      // Recalc when user changes days
+      document.getElementById("stayDuration")
+        .addEventListener("input", updatePaymentAmount);
     });
 
     document.getElementById("paymentForm").addEventListener("submit", async function (e) {
       e.preventDefault();
-
       const spinner = document.getElementById("spinner");
-      const confirmationMessage = document.getElementById("confirmationMessage");
-
+      const confirm = document.getElementById("confirmationMessage");
       spinner.style.display = "flex";
 
       const data = {
-        propertyId: document.getElementById("propertyId").value,
-        amount: document.getElementById("amount").value,
-        payer_name: document.getElementById("payerName").value,
-        reference: document.getElementById("paymentReference").value,
-        invoice_id: document.getElementById("invoiceText").innerText
+        propertyId:  document.getElementById("propertyId").value,
+        amount:      document.getElementById("totalAmount").value,
+        payer_name:  document.getElementById("payerName").value,
+        reference:   document.getElementById("paymentReference").value,
+        invoice_id:  document.getElementById("invoiceText").innerText
       };
 
       try {
-        const response = await fetch("{{ url_for('confirm_payment') }}", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(data)
+        const res = await fetch("{{ url_for('confirm_payment') }}", {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify(data)
         });
+        spinner.style.display = "none";
 
-        if (response.ok) {
-          spinner.style.display = "none";
-          confirmationMessage.style.display = "block";
-
+        if (res.ok) {
+          confirm.style.display = "block";
           document.getElementById("paymentForm").reset();
-
-          setTimeout(() => {
-            confirmationMessage.style.display = "none";
-          }, 4000);
+          // New invoice + recalc
+          document.getElementById("invoiceText").innerText = generateInvoiceId();
+          updatePaymentAmount();
+          setTimeout(() => confirm.style.display = "none", 4000);
         } else {
           alert("Something went wrong. Please try again.");
-          spinner.style.display = "none";
         }
-
-      } catch (error) {
-        console.error("Submission error:", error);
+      } catch (err) {
+        console.error(err);
         alert("Network or server error occurred.");
-        spinner.style.display = "none";
       }
     });
   </script>
 </main>
+
 {% endblock %}
 
 {% set active_page = 'make_payment' %}
+
+
