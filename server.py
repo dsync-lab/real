@@ -337,12 +337,7 @@ def view_rent_property(rent_property_id):
                 
 
             if property_data:
-                daily_price = property_data.get('price', '0')  # Get the string price
-                property_data['daily_price'] = daily_price
-                print(f'FUCKING CUNT {property_data['daily_price']}')
-                property_data['weekly_price'] = daily_price * 7
-                property_data['monthly_price'] = daily_price * 30
-                property_data['yearly_price'] = daily_price * 365
+                
                 return render_template("property-single.html", property_data=property_data, source="Rent", route="rent_property", image=image, image_path=formatted_image_path) 
             else:
                 return "Property not found", 404
