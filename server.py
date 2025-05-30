@@ -299,7 +299,21 @@ def view_property(property_id):
             the_image_path= formatted_image_path[1:]
             print(f'this is IMAGES {agent_image}')
 
-            return render_template("property-single.html", property_data=property_data, agent_data=agent_data,source="Buy", route="buy_property", image=image, agent_image=agent_image,image_path=the_image_path) 
+            _price = property_data.price.replace(',', '')
+
+            daily_price = int(_price)
+            print(f'FUCKKKKKKKK£R£******* {daily_price}')
+            weekly_price = daily_price * 7
+            monthly_price = daily_price * 30
+            yearly_price = daily_price * 365
+            full_price = {
+                'daily': daily_price,
+                'weekly': weekly_price,
+                'monthly': monthly_price,
+                'yearly': yearly_price
+            }
+
+            return render_template("property-single.html", property_data=property_data, full_price = full_price, agent_data=agent_data,source="Buy", route="buy_property", image=image, agent_image=agent_image,image_path=the_image_path) 
         else:
             return "Property not found", 404
     else:
@@ -323,6 +337,12 @@ def view_rent_property(rent_property_id):
                 
 
             if property_data:
+                daily_price = property_data.get('price', '0')  # Get the string price
+                property_data['daily_price'] = daily_price
+                print(f'FUCKING CUNT {property_data['daily_price']}')
+                property_data['weekly_price'] = daily_price * 7
+                property_data['monthly_price'] = daily_price * 30
+                property_data['yearly_price'] = daily_price * 365
                 return render_template("property-single.html", property_data=property_data, source="Rent", route="rent_property", image=image, image_path=formatted_image_path) 
             else:
                 return "Property not found", 404
@@ -732,7 +752,6 @@ def upload_image(property_id, image_data, property_folder):
     target_size = (800, 600)
     temp_file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     image_data.save(temp_file_path)
-    
 
     if is_image_valid(temp_file_path, image_min_size, image_max_size, min_width, min_height, max_width, max_height):
     

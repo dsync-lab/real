@@ -60,110 +60,113 @@
       <div class="row">
         <div class="col-sm-12">
 
-          <div class="row justify-content-between">
-            <div class="col-md-5 col-lg-4">
-              <div class="property-price d-flex justify-content-center foo">
-                <div class="card-header-c d-flex">
-                  <div class="card-box-ico">
-                    <div class="card-title-c align-self-center" style="margin: 15%;">
-                      <p class="title-c" style="font-size: 1.3rem; margin: 0;">
-                        Booking Rate: £{{ property_data.price }} / day
-                      </p>                    </div>
+          <!-- Updated Property Detail UI -->
+          <div class="row">
+            <!-- Left Column: Pricing & Summary -->
+            <div class="col-md-5 col-lg-4 mb-4">
+              <div class="card shadow-sm h-100">
+                <div class="card-body d-flex flex-column">
+                  <!-- Pricing Rates -->
+                  <h5 class="card-title text-center mb-3">Booking Rate</h5>
+                  <ul class="list-inline text-center mb-4">
+                    <li class="list-inline-item mx-2">
+                      <span class="d-block text-uppercase small text-muted">Day</span>
+                      <span class="h5">£{{ full_price.daily }}</span>
+                    </li>
+                    <li class="list-inline-item mx-2">
+                      <span class="d-block text-uppercase small text-muted">Week</span>
+                      <span class="h5">£{{ full_price.weekly }}</span>
+                    </li>
+                    <li class="list-inline-item mx-2">
+                      <span class="d-block text-uppercase small text-muted">Month</span>
+                      <span class="h5">£{{ full_price.monthly }}</span>
+                    </li>
+                    <li class="list-inline-item mx-2">
+                      <span class="d-block text-uppercase small text-muted">Year</span>
+                      <span class="h5">£{{ full_price.yearly }}</span>
+                    </li>
+                  </ul>
+
+                  <!-- Payment Button -->
+                  <div class="text-center mb-4">
+                    <a href="{{ url_for('make_payment', property_id=property_data.id) }}"
+                      class="btn btn-primary btn-block btn-lg">
+                      Proceed to Payment
+                    </a>
                   </div>
 
-                </div>
-              </div>
-              <!-- Proceed to Payment Button -->
-              <div class="text-center mt-3">
-                <a href="{{ url_for('make_payment', property_id=property_data.id) }}" class="btn btn-primary btn-lg">
-                  Proceed to Payment
-                </a>
-              </div>
-              <div class="property-summary">
-                <div class="row">
-                  <div class="col-sm-12">
-                    <div class="title-box-d section-t4">
-                      <h3 class="title-d">Quick Summary</h3>
-                    </div>
-                  </div>
-                </div>
-                <div class="summary-list">
-                  <ul class="list">
-                    <li class="d-flex justify-content-between">
-                      <strong>Property ID:</strong>
-                      <span>{{ property_data.id * 39433 }}</span>
+                  <!-- Quick Summary -->
+                  <h6 class="text-uppercase small text-muted">Quick Summary</h6>
+                  <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between py-2">
+                      <span>Property ID</span>
+                      <strong>{{ property_data.id * 39433 }}</strong>
                     </li>
-                    <li class="d-flex justify-content-between">
-                      <strong>Location:</strong>
-                      <span> {{ property_data.address }}</span>
+                    <li class="list-group-item d-flex justify-content-between py-2">
+                      <span>Location </span>
+                      <strong> {{ property_data.address }}</strong>
                     </li>
-                    <li class="d-flex justify-content-between">
-                      <strong>Property Type:</strong>
-                      <span>{{ property_data.property_type }}</span>
+                    <li class="list-group-item d-flex justify-content-between py-2">
+                      <span>Type </span>
+                      <strong> {{ property_data.property_type }}</strong>
                     </li>
-                    <li class="d-flex justify-content-between">
-                      <strong>Status:</strong>
-                      <span>{{ property_data.property_status }}</span>
+                    <li class="list-group-item d-flex justify-content-between py-2">
+                      <span>Status</span>
+                      <strong>{{ property_data.property_status }}</strong>
                     </li>
-                    <li class="d-flex justify-content-between">
-                      <strong>Area:</strong>
-                      <span>{{ property_data.area }}m
-                        <sup>2</sup>
-                      </span>
+                    <li class="list-group-item d-flex justify-content-between py-2">
+                      <span>Area</span>
+                      <strong>{{ property_data.area }} m<sup>2</sup></strong>
                     </li>
-                    <li class="d-flex justify-content-between">
-                      <strong>Beds:</strong>
-                      <span>4</span>
+                    <li class="list-group-item d-flex justify-content-between py-2">
+                      <span>Beds</span>
+                      <strong>4</strong>
                     </li>
-                    <li class="d-flex justify-content-between">
-                      <strong>Baths:</strong>
-                      <span>{{ property_data.bathroom }}</span>
+                    <li class="list-group-item d-flex justify-content-between py-2">
+                      <span>Baths</span>
+                      <strong>{{ property_data.bathroom }}</strong>
                     </li>
-                    <li class="d-flex justify-content-between">
-                      <strong>Garage:</strong>
-                      <span>{{ property_data.garage}}</span>
+                    <li class="list-group-item d-flex justify-content-between py-2">
+                      <span>Garage</span>
+                      <strong>{{ property_data.garage }}</strong>
                     </li>
                   </ul>
                 </div>
               </div>
             </div>
-            <div class="col-md-7 col-lg-7 section-md-t3">
-              <div class="row">
-                <div class="col-sm-12">
-                  <div class="title-box-d">
-                    <h3 class="title-d">Property Description</h3>
-                  </div>
-                </div>
-              </div>
-              <div class="property-description">
-                <p class="description color-text-a">
-                  {{ property_data.property_description }}
-                </p>
 
-              </div>
-              <div class="row section-t3">
-                <div class="col-sm-12">
-                  <div class="title-box-d">
-                    <h3 class="title-d">Amenities</h3>
-                  </div>
+            <!-- Right Column: Description & Amenities -->
+            <div class="col-md-7 col-lg-8">
+              <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                  <h5 class="card-title border-bottom pb-2">Property Description</h5>
+                  <p class="card-text text-justify text-secondary">
+                    {{ property_data.property_description }}
+                  </p>
                 </div>
               </div>
-              <div class="amenities-list color-text-a">
-                {% if property_data.property_type != "Land" %}
-                <ul class="list-a no-margin">
-                  <li>Balcony</li>
-                  <li>Kitchen</li>
-                  <li>Resort-style olympic-sized pool</li>
-                  <li>Oak plank flooring</li>
-                  <li>Internet</li>
-                  <li>Parking</li>
-                  <li>Sun Room</li>
-                  <li>Floor to ceiling windows</li>
-                </ul>
-                {% endif %}
+
+              {% if property_data.property_type != 'Land' %}
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <h5 class="card-title border-bottom pb-2">Amenities</h5>
+                  <ul class="row list-unstyled mb-0">
+                    <li class="col-6 mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Balcony</li>
+                    <li class="col-6 mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Kitchen</li>
+                    <li class="col-6 mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Olympic Pool</li>
+                    <li class="col-6 mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Oak Flooring</li>
+                    <li class="col-6 mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Internet</li>
+                    <li class="col-6 mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Parking</li>
+                    <li class="col-6 mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Sun Room</li>
+                    <li class="col-6 mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Floor-to-Ceiling
+                      Windows</li>
+                  </ul>
+                </div>
               </div>
+              {% endif %}
             </div>
           </div>
+
         </div>
         <div class="col-md-10 offset-md-1">
           <ul class="nav nav-pills-a nav-pills mb-3 section-t3" id="pills-tab" role="tablist">
@@ -243,8 +246,8 @@
                     </div>
                     <div class="col-md-12 mb-1">
                       <div class="form-group">
-                        <input type="text" name="subject" id="inputSubject" class="form-control form-control-lg form-control-a"
-                          placeholder="Subject" required>
+                        <input type="text" name="subject" id="inputSubject"
+                          class="form-control form-control-lg form-control-a" placeholder="Subject" required>
                       </div>
                     </div>
                     <div class="col-md-12 mb-1">
@@ -264,7 +267,7 @@
           </div>
         </div>
       </div>
-      
+
     </div>
   </section><!-- End Property Single-->
   <script>
