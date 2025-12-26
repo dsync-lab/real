@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}Crypto Payment{% endblock %}
+
+{% block content %}
+<main id="main">
+  <style>
+    /* === Payment Card Styling === */
+    .payment-card {
+      border-radius: 1rem;
+      box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.08);
+      background-color: #fff;
+      border: 1px solid #e6e6e6;
+      transition: transform 0.2s;
+    }
+    .payment-card:hover {
+      transform: translateY(-4px);
+    }
+
+    /* === Spinner & Confirmation === */
+    .spinner-container, .confirmation-message { display: none; justify-content: center; align-items: center; }
+    .spinner-border { width: 2rem; height: 2rem; }
+
+    /* === Form Elements === */
+    .form-label { font-weight: 500; }
+    .list-group-item strong { min-width: 60px; display: inline-block; }
+
+    /* === Button States === */
+    .btn-submit:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    /* === Page Centering === */
+    .full-height-center {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      padding-top: calc(2rem + var(--navbar-height, 70px)); /* adjust navbar height if needed */
+      background-color: #f8f9fa;
+    }
+
+    /* === Footer Info === */
+    .secure-footer { font-size: 0.85rem; color: #6c757d; margin-top: 1.5rem; }
+
+    /* === Contact Section === */
+    .contact-section {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.95rem;
+      color: #495057;
+    }
+    .contact-section a {
+      color: #0d6efd;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .contact-section a:hover {
+      text-decoration: underline;
+    }
+  </style>
+
+  <div class="container full-height-center">
+    <div class="card payment-card p-4 w-100" style="max-width: 480px;">
+      <div class="card-body">
+        <h2 class="card-title text-center mb-3">Pay with Crypto</h2>
+        <p class="text-center text-muted mb-4">Send payment to a wallet below and submit your transaction ID.</p>
+
+        <form id="paymentForm" method="POST" class="needs-validation" novalidate>
+          <!-- Invoice ID -->
+          <div class="mb-3 text-center">
+            <label class="form-label"><strong>Invoice ID:</strong></label>
+            <div id="invoiceText" class="fw-bold fs-5"></div>
+          </div>
+
+          <!-- Property ID -->
+          <div class="mb-3">
+            <label class="form-label">Property ID</label>
+            <input type="text" class="form-control" value="{{ property_id * 39433 }}" readonly>
+          </div>
+
+          <!-- Amount -->
+          <div class="mb-3">
+            <label class="form-label">Amount (£)</label>
+            <input type="text" class="form-control" value="{{ property_data.price if property_data else '0' }}" readonly>
+          </div>
+
+          <!-- Crypto Wallets -->
+          <div class="mb-3">
+            <label class="form-label">Crypto Wallets</label>
+            <ul class="list-group">
+              {% if wallets %}
+                {% for coin, addr in wallets.items() %}
+                  <li class="list-group-item"><strong>{{ coin }}:</strong> {{ addr }}</li>
+                {% endfor %}
+              {% else %}
+                <li class="list-group-item text-muted">No wallets available</li>
+              {% endif %}
+            </ul>
+          </div>
+
+          <!-- Payer Name -->
+          <div class="mb-3">
+            <label class="form-label">Your Name</label>
+            <input type="text" class="form-control" id="payerName" placeholder="Name for reference" required>
+          </div>
+
+          <!-- Transaction ID -->
+          <div class="mb-3">
+            <label class="form-label">Transaction ID</label>
+            <input type="text" class="form-control" id="paymentReference" placeholder="Your crypto tx ID" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 btn-submit mt-2">Submit Payment</button>
+        </form>
+
+        <!-- Spinner -->
+        <div class="spinner-container mt-3" id="spinner">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Processing...</span>
+          </div>
+        </div>
+
+        <!-- Confirmation -->
+        <div id="confirmationMessage" class="confirmation-message alert alert-success text-center mt-4">
+          ✅ Thank you! Your crypto payment has been submitted.
+        </div>
+
+        <!-- Contact Section -->
+        <div class="contact-section">
+          <p>If you have any issues or prefer to pay via email, contact us at <a href="mailto:walterpropertiesrealtor@gmail.com">walterpropertiesrealtor@gmail.com</a></p>
+        </div>
+
+        <div class="text-center secure-footer">Secure Payment | Walter Properties</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const invoiceTextEl = document.getElementById("invoiceText");
+      const spinner = document.getElementById("spinner");
+      const confirm = document.getElementById("confirmationMessage");
+      const submitBtn = document.querySelector(".btn-submit");
+
+      const generateInvoiceId = () => `INV-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      invoiceTextEl.innerText = generateInvoiceId();
+
+      const form = document.getElementById("paymentForm");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        spinner.style.display = "flex";
+        submitBtn.disabled = true;
+
+        const data = {
+          propertyId: "{{ property_id }}",
+          payer_name: document.getElementById("payerName").value,
+          tx_id: document.getElementById("paymentReference").value,
+          invoice_id: invoiceTextEl.innerText
+        };
+
+        try {
+          const res = await fetch("{{ url_for('confirm_payment') }}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+          });
+
+          spinner.style.display = "none";
+          submitBtn.disabled = false;
+
+          if (res.ok) {
+            confirm.style.display = "block";
+            form.reset();
+            invoiceTextEl.innerText = generateInvoiceId();
+            setTimeout(() => confirm.style.display = "none", 4000);
+          } else {
+            alert("Something went wrong. Please try again.");
+          }
+        } catch(err) {
+          console.error(err);
+          spinner.style.display = "none";
+          submitBtn.disabled = false;
+          alert("Network or server error occurred.");
+        }
+      });
+    });
+  </script>
+</main>
+{% endblock %}
+{% set active_page = 'make_payment' %}

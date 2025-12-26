@@ -69,21 +69,15 @@
                   <!-- Pricing Rates -->
                   <h5 class="card-title text-center mb-3">Booking Rate</h5>
                   <ul class="list-inline text-center mb-4">
-                    <li class="list-inline-item mx-2">
-                      <span class="d-block text-uppercase small text-muted">Day</span>
-                      <span class="h5">£{{ full_price.daily }}</span>
-                    </li>
-                    <li class="list-inline-item mx-2">
-                      <span class="d-block text-uppercase small text-muted">Week</span>
-                      <span class="h5">£{{ full_price.weekly }}</span>
-                    </li>
+                    
+                    
                     <li class="list-inline-item mx-2">
                       <span class="d-block text-uppercase small text-muted">Month</span>
-                      <span class="h5">£{{ full_price.monthly }}</span>
+                      <span class="h5">${{ full_price.monthly }}</span>
                     </li>
                     <li class="list-inline-item mx-2">
                       <span class="d-block text-uppercase small text-muted">Year</span>
-                      <span class="h5">£{{ full_price.yearly }}</span>
+                      <span class="h5">${{ full_price.yearly }}</span>
                     </li>
                   </ul>
 
@@ -120,7 +114,7 @@
                     </li>
                     <li class="list-group-item d-flex justify-content-between py-2">
                       <span>Beds</span>
-                      <strong>4</strong>
+                      <strong>2</strong>
                     </li>
                     <li class="list-group-item d-flex justify-content-between py-2">
                       <span>Baths</span>
@@ -218,10 +212,7 @@
                     <strong>Email:</strong>
                     <span class="color-text-a">{{ agent_data.email }}</span>
                   </li>
-                  <li class="d-flex justify-content-between">
-                    <strong>Discord:</strong>
-                    <span class="color-text-a">{{ agent_data.linkedin }}</span>
-                  </li>
+                 
                 </ul>
 
 
